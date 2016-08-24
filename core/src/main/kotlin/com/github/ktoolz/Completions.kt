@@ -30,24 +30,15 @@ fun <T> Iterator<T>.containsInOrder(searchThis: Iterator<T>): Boolean {
  * @return 0 if this List contains the given iterator in the same order. Minus this result by 1 for each missing
  * element in the given operator
  */
-fun <T> List<T>.score(searchThis: List<T>, minScore: Int = Int.MIN_VALUE): Int {
-
-    fun List<T>.score(currentScore: Int, searchThis: List<T>): Int =
-            when {
-                searchThis.isEmpty -> currentScore
-                currentScore == minScore -> minScore
-                else -> dropWhile { it != searchThis.head() }.let { lookupRemainder ->
-                    if (lookupRemainder.isEmpty) this.score(currentScore - 1, searchThis.tail())
-                    else lookupRemainder.tail().score(currentScore, searchThis.tail())
-                }
+fun <T> List<T>.score(searchThis: List<T>, minScore: Int = Int.MIN_VALUE, currentScore: Int = 0): Int =
+        when {
+            searchThis.isEmpty -> currentScore
+            currentScore == minScore -> currentScore
+            else -> dropWhile { it != searchThis.head() }.let { lookupRemainder ->
+                if (lookupRemainder.isEmpty) this.score(searchThis.tail(), minScore, currentScore - 1)
+                else lookupRemainder.tail().score(searchThis.tail(), minScore, currentScore)
             }
-
-
-    return when {
-        searchThis.isEmpty -> 0
-        else -> this.score(0, searchThis)
-    }
-}
+        }
 
 fun <T> Iterable<T>.containsInOrder(iterable: Iterable<T>) = iterator().containsInOrder(iterable.iterator())
 fun String.containsInOrder(s: String) = toCharArray().iterator().containsInOrder(s.toCharArray().iterator())
