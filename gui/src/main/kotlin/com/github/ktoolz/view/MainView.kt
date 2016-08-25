@@ -1,11 +1,13 @@
 package com.github.ktoolz.view
 
+import com.github.ktoolz.controller.load
 import com.github.ktoolz.model.SearchResult
 import com.github.ktoolz.score
 import com.github.ktoolz.traverseFile
 import com.sun.javafx.collections.ObservableListWrapper
 import javafx.beans.property.SimpleStringProperty
 import javafx.scene.control.TableView
+import javafx.scene.control.TextField
 import javafx.scene.input.KeyCode.*
 import javafx.scene.layout.BorderPane
 import javaslang.Tuple3
@@ -27,7 +29,7 @@ class MainView : View() {
 
     val minScore = -3
 
-    val files = traverseFile(File(".."))
+    lateinit var files: Stream<File>
 
     val search = SimpleStringProperty()
 
@@ -55,17 +57,18 @@ class MainView : View() {
         with(root) {
             top {
                 textfield(search) {
+                    isDisable = true
                     id = "inputSearch"
                     setOnKeyPressed { event ->
                         when (event.code) {
-//                            DOWN -> scene.lookup("#tableView").use { lookup ->
-//                                when (lookup) {
-//                                    is TableView<*> -> lookup.apply {
-//                                        selectFirst()
-//                                        requestFocus()
-//                                    }
-//                                }
-//                            }
+                        //                            DOWN -> scene.lookup("#tableView").use { lookup ->
+                        //                                when (lookup) {
+                        //                                    is TableView<*> -> lookup.apply {
+                        //                                        selectFirst()
+                        //                                        requestFocus()
+                        //                                    }
+                        //                                }
+                        //                            }
                             DOWN -> table.apply {
                                 selectFirst()
                                 requestFocus()
@@ -99,6 +102,9 @@ class MainView : View() {
                 //add(table.apply { id... })
             }
         }
+
+        runAsync { files = load(File("..")) } success { println("Loaded!") } ui { root.scene.lookup("#inputSearch").castUse(TextField::class.java) { this.isDisable = false } }
+
     }
 
     private fun search(searchText: String): Stream<SearchResult> {
