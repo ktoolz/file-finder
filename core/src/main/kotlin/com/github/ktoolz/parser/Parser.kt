@@ -1,5 +1,6 @@
 package com.github.ktoolz.parser
 
+import com.github.ktoolz.model.FilterQuery
 import com.github.ktoolz.model.SearchQuery
 import javaslang.collection.List
 
@@ -20,11 +21,11 @@ class ContextParser(val filterNames: List<String>) {
      */
     private class MutableQuery(val term: MutableList<Char> = mutableListOf(),
                                val directories: MutableList<List<Char>> = mutableListOf(),
-                               val modifiers: MutableList<List<Char>> = mutableListOf()) {
+                               val modifiers: MutableList<FilterQuery> = mutableListOf()) {
 
         override fun toString(): String = "$term, $directories, $modifiers"
         fun toQuery() = SearchQuery(term.joinToString(""),
-                                    List.ofAll(modifiers.map { it.mkString("") }),
+                                    List.ofAll(modifiers),
                                     List.ofAll(directories.map { it.mkString("") }))
     }
 
@@ -79,12 +80,16 @@ class ContextParser(val filterNames: List<String>) {
      * If End of Stream reached, the special char was the last one of the query.
      * Call backtracking to process this char normally (it's not a filter)
      */
-    private fun filter(list: List<Char>, query: MutableQuery, backtracking: () -> MutableQuery): MutableQuery =
+    private fun filter(list: List<Char>,
+                       query: MutableQuery,
+                       backtracking: () -> MutableQuery,
+                       negated: Boolean = false): MutableQuery =
             if (list.isEmpty) backtracking()
+            else if (list.head() == '!') filter(list.tail(), query, backtracking, !negated)
             else {
                 val split = list.splitAt { it == ' ' }
                 if (filterNames.contains(split._1.mkString())) {
-                    query.modifiers.add(split._1)
+                    query.modifiers.add(FilterQuery(split._1.mkString(), negated))
                     neutral(split._2, query)
                 } else {
                     backtracking()
@@ -133,13 +138,13 @@ class ContextParser(val filterNames: List<String>) {
             else {
                 fun readUntil(c: Char, backtracking: () -> MutableQuery) =
                         list.tail().splitAt { it == c }.let { split ->
-                                    // use .let for this special purpose: https://www.youtube.com/watch?v=Wt88GMJmVk0
-                                    if (split._2.isEmpty) backtracking() // pair is not matched
-                                    else {
-                                        query.term.addAll(split._1)
-                                        neutral(split._2.tail(), query)
-                                    }
-                                }
+                            // use .let for this special purpose: https://www.youtube.com/watch?v=Wt88GMJmVk0
+                            if (split._2.isEmpty) backtracking() // pair is not matched
+                            else {
+                                query.term.addAll(split._1)
+                                neutral(split._2.tail(), query)
+                            }
+                        }
 
                 val readWord = {
                     // make sure to consume at leat one char even if it's a space: https://www.youtube.com/watch?v=zI339U6GS9s
@@ -175,7 +180,7 @@ fun main(args: Array<String>) {
     "test !ok !foo !bar".parseSearch()
     "'test !ok !foo !bar'".parseSearch()
     "'test !ok !foo !bar".parseSearch()
-    "test !ok !foo !autre un chien        qui passe !foo                ".parseSearch()
+    "test !ok !foo !autre un chien        qui passe !!foo                ".parseSearch()
     "test !ok /src".parseSearch()
     "test !ok /src/main/kotlin /src/test/kotlin".parseSearch()
     "https://www.youtube.com/watch?v=4bPGxLxogvw".parseSearch()
