@@ -14,7 +14,9 @@ infix fun (() -> Any).whenever(condition: Boolean) {
     if (condition) this()
 }
 
-class ContextParser(val filterNames: List<String>) {
+class ContextParser(val filterNames: List<String>,
+                    val filterSpecialChar: Char = '!',
+                    val directorySpecialChar: Char = '/') {
 
     /**
      * Mutable version of a SearchQuery used to build it step by step
@@ -24,7 +26,8 @@ class ContextParser(val filterNames: List<String>) {
                                val modifiers: MutableList<FilterQuery> = mutableListOf()) {
 
         override fun toString(): String = "$term, $directories, $modifiers"
-        fun toQuery() = SearchQuery(term.joinToString(""),
+
+        fun toQuery() = SearchQuery(term.joinToString("").trim(),
                                     List.ofAll(modifiers),
                                     List.ofAll(directories.map { it.mkString("") }))
     }
@@ -34,6 +37,13 @@ class ContextParser(val filterNames: List<String>) {
      */
     fun parse(query: String) = neutral(List.ofAll(query.toCharArray()), MutableQuery()).toQuery()
 
+
+    /**
+     * Private extension for cleaner code
+     *
+     * @return true if the receiver char can act as a separator between two tokens
+     */
+    private fun Char.isTokenSeparator() = this == ' '
 
     /**
      * Neutral state of the state machine.
@@ -47,6 +57,8 @@ class ContextParser(val filterNames: List<String>) {
             if (list.isEmpty) query
             else when (list.head()) {
                 ' ' -> pendingSpace(list.tail(), query) { query(list, query) }
+                filterSpecialChar -> filter(list.tail(), query) { query(list, query) }
+                directorySpecialChar -> directory(list.tail(), query) { query(list, query) }
                 else -> query(list, query)
             }
 
@@ -63,8 +75,8 @@ class ContextParser(val filterNames: List<String>) {
             if (list.isEmpty) query // do nothing as trailing space is ignored
             else when (list.head()) {
                 ' ' -> pendingSpace(list.tail(), query, backtracking)
-                '!' -> filter(list.tail(), query, backtracking)
-                '/' -> directory(list.tail(), query, backtracking)
+                filterSpecialChar -> filter(list.tail(), query, backtracking = backtracking)
+                directorySpecialChar -> directory(list.tail(), query, backtracking)
                 else -> backtracking()
             }
 
@@ -82,12 +94,12 @@ class ContextParser(val filterNames: List<String>) {
      */
     private fun filter(list: List<Char>,
                        query: MutableQuery,
-                       backtracking: () -> MutableQuery,
-                       negated: Boolean = false): MutableQuery =
+                       negated: Boolean = false,
+                       backtracking: () -> MutableQuery): MutableQuery =
             if (list.isEmpty) backtracking()
-            else if (list.head() == '!') filter(list.tail(), query, backtracking, !negated)
+            else if (list.head() == filterSpecialChar) filter(list.tail(), query, !negated, backtracking)
             else {
-                val split = list.splitAt { it == ' ' }
+                val split = list.splitAt { it.isTokenSeparator() }
                 if (filterNames.contains(split._1.mkString())) {
                     query.modifiers.add(FilterQuery(split._1.mkString(), negated))
                     neutral(split._2, query)
@@ -111,9 +123,10 @@ class ContextParser(val filterNames: List<String>) {
     private fun directory(list: List<Char>, query: MutableQuery, backtracking: () -> MutableQuery): MutableQuery =
             if (list.isEmpty) backtracking()
             else {
-                val split = list.splitAt { it == ' ' }
+                val split = list.splitAt { it.isTokenSeparator() }
                 val isValidDirectoryChar: (Char) -> Boolean = {
-                    it.isLetterOrDigit() || List.of('_', '-', '/').contains(it)
+                    // TODO extract this list into a constant
+                    it.isLetterOrDigit() || List.of('_', '-', directorySpecialChar).contains(it)
                 }
                 if (split._1.all(isValidDirectoryChar)) {
                     query.directories.add(split._1)
@@ -149,7 +162,7 @@ class ContextParser(val filterNames: List<String>) {
                 val readWord = {
                     // make sure to consume at leat one char even if it's a space: https://www.youtube.com/watch?v=zI339U6GS9s
                     query.term.add(list.head())
-                    val split = list.tail().splitAt { it == ' ' }
+                    val split = list.tail().splitAt { it.isTokenSeparator() }
                     query.term.addAll(split._1)
                     neutral(split._2, query)
                 }
@@ -162,26 +175,4 @@ class ContextParser(val filterNames: List<String>) {
                     }
                 }
             }
-}
-
-fun String.parseSearch() {
-
-    println(ContextParser(List.of("ok", "foo", "bar")).parse(this))
-
-}
-
-// TODO replace with unit test
-fun main(args: Array<String>) {
-    "test".parseSearch()
-    "test!".parseSearch()
-    "test!ok".parseSearch()
-    "test !ok".parseSearch()
-    "test !ok !foo".parseSearch()
-    "test !ok !foo !bar".parseSearch()
-    "'test !ok !foo !bar'".parseSearch()
-    "'test !ok !foo !bar".parseSearch()
-    "test !ok !foo !autre un chien        qui passe !!foo                ".parseSearch()
-    "test !ok /src".parseSearch()
-    "test !ok /src/main/kotlin /src/test/kotlin".parseSearch()
-    "https://www.youtube.com/watch?v=4bPGxLxogvw".parseSearch()
 }
