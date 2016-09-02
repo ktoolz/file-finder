@@ -40,6 +40,10 @@ class MainView : View() {
         (root.scene.lookup("#tableView") as TableView<SearchResult>)
     }
 
+    val inputSearch: TextField by lazy {
+        root.scene.lookup("#inputSearch") as TextField
+    }
+
 
     init {
         title = messages["title"]
@@ -87,7 +91,7 @@ class MainView : View() {
 
                     setOnKeyPressed { event ->
                         when (event.code) {
-                            UP, PAGE_UP, HOME -> if (this.selectedItem == result.first()) scene.lookup("#inputSearch").requestFocus()
+                            UP, PAGE_UP, HOME -> if (this.selectedItem == result.first()) inputSearch.requestFocus()
                             ESCAPE -> scene.lookup("#inputSearch").requestFocus()
                             LEFT, RIGHT -> println("Display action menu!") // TODO display the menu
                         }
@@ -103,7 +107,7 @@ class MainView : View() {
             }
         }
 
-        runAsync { files = load(File("..")) } success { println("Loaded!") } ui { root.scene.lookup("#inputSearch").castUse(TextField::class.java) { this.isDisable = false } }
+        runAsync { files = load(File("..")) } success { println("Loaded!") } ui { inputSearch.isDisable = false }
 
     }
 
@@ -122,9 +126,7 @@ class MainView : View() {
         }
         val toSearchResult: (File) -> SearchResult = { file ->
             val lowerCaseName = file.name.toLowerCase()
-            SearchResult(lowerCaseName.score(lowerCaseSearch, minScore),
-                         file.name,
-                         file)
+            SearchResult(lowerCaseName.score(lowerCaseSearch, minScore), file)
         }
         return files.map(toSearchResult)
                 .map(ponderation)
