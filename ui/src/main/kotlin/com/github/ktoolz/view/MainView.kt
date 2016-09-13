@@ -1,9 +1,8 @@
 package com.github.ktoolz.view
 
 import com.github.ktoolz.controller.load
+import com.github.ktoolz.matchers
 import com.github.ktoolz.model.SearchResult
-import com.github.ktoolz.score
-import com.github.ktoolz.traverseFile
 import com.sun.javafx.collections.ObservableListWrapper
 import javafx.beans.property.SimpleStringProperty
 import javafx.scene.control.TableView
@@ -11,7 +10,6 @@ import javafx.scene.control.TextField
 import javafx.scene.input.KeyCode.*
 import javafx.scene.layout.BorderPane
 import javaslang.Tuple3
-import javaslang.collection.Stream
 import tornadofx.*
 import java.io.File
 
@@ -29,7 +27,7 @@ class MainView : View() {
 
     val minScore = -3
 
-    lateinit var files: Stream<File>
+    lateinit var files: List<File>
 
     val search = SimpleStringProperty()
 
@@ -111,28 +109,35 @@ class MainView : View() {
 
     }
 
-    private fun search(searchText: String): Stream<SearchResult> {
+    private fun search(searchText: String): List<SearchResult> {
         val lowerCaseSearch = searchText.toLowerCase()
 
         // Exemple of ponderation, to be remove
         // TODO remove
-        val ponderation: (SearchResult) -> SearchResult = {
-            when {
-                it.filename.endsWith(".kt") -> it.copy(score = it.score + 2)
-                it.filename.endsWith(".md") -> it.copy(score = it.score + 1)
-                it.filename.endsWith(".class") -> it.copy(score = Int.MIN_VALUE)
-                else -> it
-            }
-        }
+        /*        val ponderation: (SearchResult) -> SearchResult = {
+                    when {
+                        it.filename.endsWith(".kt") -> it.copy(score = it.score + 2)
+                        it.filename.endsWith(".md") -> it.copy(score = it.score + 1)
+                        it.filename.endsWith(".class") -> it.copy(score = Int.MIN_VALUE)
+                        else -> it
+                    }
+                }*/
         val toSearchResult: (File) -> SearchResult = { file ->
             val lowerCaseName = file.name.toLowerCase()
-            SearchResult(lowerCaseName.score(lowerCaseSearch, minScore), file)
+            SearchResult(lowerCaseName.matchers(lowerCaseSearch), file)
         }
         return files.map(toSearchResult)
-                .map(ponderation)
+                //                .map(ponderation)
+                .apply {
+                    this.forEach {
+                        println(it.file.toString())
+                        it.matchers.forEach { println(it.matcher + " > " + it.found + " > " + it.distance) }
+                        println("-----------")
+                    }
+                }
                 .filter { it.score >= minScore }
-                .sortBy { Tuple3(-it.score, it.filename.length, it.filename) }
-                .take(15)
+                .sortedBy { Tuple3(-it.score, it.filename.length, it.filename) }
+                .subList(0, 15)
     }
 
 

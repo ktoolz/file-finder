@@ -1,8 +1,7 @@
 package com.github.ktoolz
 
+import com.github.ktoolz.model.PatternMatcher
 import javaslang.collection.List
-import javaslang.collection.Stream
-import java.io.File
 
 /**
  * Search if this iterator contains the given one in order
@@ -40,18 +39,32 @@ fun <T> List<T>.score(searchThis: List<T>, minScore: Int = Int.MIN_VALUE, curren
             }
         }
 
+fun <T> List<T>.matchers(searchThis: List<T>,
+                         currentMatchers: List<PatternMatcher<T>>): List<PatternMatcher<T>> =
+        when {
+            searchThis.isEmpty -> currentMatchers
+            else ->
+                dropWhile { it != searchThis.head() }.let { remainder ->
+                    if (remainder.isEmpty) this.matchers(searchThis.tail(),
+                                                         currentMatchers.append(PatternMatcher(searchThis.head(),
+                                                                                               false,
+                                                                                               0)))
+                    else remainder.tail().matchers(searchThis.tail(),
+                                                   currentMatchers.append(PatternMatcher(searchThis.head(),
+                                                                                         true,
+                                                                                         this@matchers.indexOf(
+                                                                                                 searchThis.head()))))
+
+                }
+        }
+
 fun <T> Iterable<T>.containsInOrder(iterable: Iterable<T>) = iterator().containsInOrder(iterable.iterator())
 fun String.containsInOrder(s: String) = toCharArray().iterator().containsInOrder(s.toCharArray().iterator())
 fun String.score(s: String,
                  minScore: Int = Int.MIN_VALUE) = List.ofAll(toCharArray()).score(List.ofAll(s.toCharArray()),
                                                                                   minScore)
 
-// TODO move to dedicated project
-fun traverseFile(f: File): Stream<File> = when {
-    f.isFile -> Stream.of(f)
-    f.isDirectory -> Stream.of(*f.listFiles()).flatMap { file -> traverseFile(file) }
-    else -> Stream.empty()
-}
+fun String.matchers(s: String) = List.ofAll(toCharArray()).matchers(List.ofAll(s.toCharArray()), List.empty())
 
 
 // TODO move to dedicated project

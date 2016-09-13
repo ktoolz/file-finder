@@ -4,16 +4,6 @@ import com.github.ktoolz.model.FilterQuery
 import com.github.ktoolz.model.SearchQuery
 import javaslang.collection.List
 
-// https://www.youtube.com/watch?v=q4BNwnZ4D4o
-infix fun (() -> Any).unless(condition: Boolean) {
-    if (!condition) this()
-}
-
-// https://www.youtube.com/watch?v=weRHyjj34ZE
-infix fun (() -> Any).whenever(condition: Boolean) {
-    if (condition) this()
-}
-
 class ContextParser(val filterNames: List<String>,
                     val filterSpecialChar: Char = '!',
                     val directorySpecialChar: Char = '/') {
