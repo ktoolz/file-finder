@@ -1,12 +1,5 @@
-package com.github.ktoolz.filefinder.parser
-
-import com.github.ktoolz.filefinder.model.FilterQuery
-import javaslang.collection.List
-import org.assertj.core.api.Assertions.assertThat
-import org.jetbrains.spek.api.Spek
-
 /*
- * File Finder - KToolZ
+ * File-Finder - KToolZ
  *
  * Copyright (c) 2016
  *
@@ -16,6 +9,13 @@ import org.jetbrains.spek.api.Spek
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.github.ktoolz.filefinder.parser
+
+import com.github.ktoolz.filefinder.model.FilterQuery
+import javaslang.collection.List
+import org.assertj.core.api.Assertions.assertThat
+import org.jetbrains.spek.api.Spek
+
 class ParserSpecs : Spek() { init {
 
     given("a search query without: filterDirectories, directory, quote") {
