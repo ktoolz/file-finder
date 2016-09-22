@@ -1,18 +1,19 @@
-package com.github.ktoolz.parser
+/*
+ * File-Finder - KToolZ
+ *
+ * Copyright (c) 2016
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+package com.github.ktoolz.filefinder.parser
 
-import com.github.ktoolz.model.FilterQuery
-import com.github.ktoolz.model.SearchQuery
+import com.github.ktoolz.filefinder.model.FilterQuery
+import com.github.ktoolz.filefinder.model.SearchQuery
 import javaslang.collection.List
-
-// https://www.youtube.com/watch?v=q4BNwnZ4D4o
-infix fun (() -> Any).unless(condition: Boolean) {
-    if (!condition) this()
-}
-
-// https://www.youtube.com/watch?v=weRHyjj34ZE
-infix fun (() -> Any).whenever(condition: Boolean) {
-    if (condition) this()
-}
 
 class ContextParser(val filterNames: List<String>,
                     val filterSpecialChar: Char = '!',
@@ -82,15 +83,15 @@ class ContextParser(val filterNames: List<String>,
 
 
     /**
-     * We are reading a filter ('!' char)
+     * We are reading a filterDirectories ('!' char)
      *
-     * # Read the filter identifier
-     * # Check if it's a valid filter name
+     * # Read the filterDirectories identifier
+     * # Check if it's a valid filterDirectories name
      * ## If yes, add it, then process the rest of the string as normal String (neutral state)
      * ## If no, trigger backtracking
      *
      * If End of Stream reached, the special char was the last one of the query.
-     * Call backtracking to process this char normally (it's not a filter)
+     * Call backtracking to process this char normally (it's not a filterDirectories)
      */
     private fun filter(list: List<Char>,
                        query: MutableQuery,
@@ -110,15 +111,15 @@ class ContextParser(val filterNames: List<String>,
 
 
     /**
-     * We are reading a filter ('/' char)
+     * We are reading a filterDirectories ('/' char)
      *
-     * # Read the directory filter
-     * # Check if it's a valid directory filter (can contains '/')
+     * # Read the directory filterDirectories
+     * # Check if it's a valid directory filterDirectories (can contains '/')
      * ## If yes, add it, then process the rest of the string as normal String (neutral state)
      * ## If no, trigger backtracking
      *
      * If End of Stream reached, the special char was the last one of the query.
-     * Call backtracking to process this char normally (it's not a filter)
+     * Call backtracking to process this char normally (it's not a filterDirectories)
      */
     private fun directory(list: List<Char>, query: MutableQuery, backtracking: () -> MutableQuery): MutableQuery =
             if (list.isEmpty) backtracking()
