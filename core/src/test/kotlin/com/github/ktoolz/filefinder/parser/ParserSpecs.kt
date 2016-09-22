@@ -1,6 +1,6 @@
-package com.github.ktoolz.parser
+package com.github.ktoolz.filefinder.parser
 
-import com.github.ktoolz.model.FilterQuery
+import com.github.ktoolz.filefinder.model.FilterQuery
 import javaslang.collection.List
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.spek.api.Spek
@@ -18,7 +18,7 @@ import org.jetbrains.spek.api.Spek
  */
 class ParserSpecs : Spek() { init {
 
-    given("a search query without: filter, directory, quote") {
+    given("a search query without: filterDirectories, directory, quote") {
         val (term, contexts, directories) = ContextParser(List.empty()).parse("foo")
 
         on("checking term content") { it("should be equals to the query") { assertThat(term).isEqualTo("foo") } }
@@ -74,7 +74,7 @@ class ParserSpecs : Spek() { init {
         on("checking directories") { it("should be empty") { assertThat(directories).isEmpty() } }
     }
 
-    given("a search query with a valid filter query at the beginning") {
+    given("a search query with a valid filterDirectories query at the beginning") {
         val (term, contexts, directories) = ContextParser(List.of("foo")).parse("!foo bar")
 
         on("checking term content") {
@@ -83,14 +83,14 @@ class ParserSpecs : Spek() { init {
             }
         }
         on("checking contexts") {
-            it("should contains exactly the filter query") {
+            it("should contains exactly the filterDirectories query") {
                 assertThat(contexts).containsExactly(FilterQuery("foo"))
             }
         }
         on("checking directories") { it("should be empty") { assertThat(directories).isEmpty() } }
     }
 
-    given("a search query with a valid filter query at the beginning and another one at the end") {
+    given("a search query with a valid filterDirectories query at the beginning and another one at the end") {
         val (term, contexts, directories) = ContextParser(List.of("foo", "goo")).parse("!foo bar !goo")
 
         on("checking term content") {
@@ -99,14 +99,14 @@ class ParserSpecs : Spek() { init {
             }
         }
         on("checking contexts") {
-            it("should contains exactly the filter query") {
+            it("should contains exactly the filterDirectories query") {
                 assertThat(contexts).containsExactly(FilterQuery("foo"), FilterQuery("goo"))
             }
         }
         on("checking directories") { it("should be empty") { assertThat(directories).isEmpty() } }
     }
 
-    given("a search query with a valid negated filter query") {
+    given("a search query with a valid negated filterDirectories query") {
         val (term, contexts, directories) = ContextParser(List.of("foo")).parse("!!foo bar")
 
         on("checking term content") {
@@ -115,7 +115,7 @@ class ParserSpecs : Spek() { init {
             }
         }
         on("checking contexts") {
-            it("should contains exactly the filter query and it should be negated") {
+            it("should contains exactly the filterDirectories query and it should be negated") {
                 assertThat(contexts).containsExactly(FilterQuery("foo", true))
             }
         }
@@ -123,7 +123,7 @@ class ParserSpecs : Spek() { init {
     }
 
 
-    given("a search query with an invalid filter query") {
+    given("a search query with an invalid filterDirectories query") {
         val (term, contexts, directories) = ContextParser(List.empty()).parse("!!foo bar")
 
         on("checking term content") {

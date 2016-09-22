@@ -1,4 +1,4 @@
-package com.github.ktoolz
+package com.github.ktoolz.filefinder
 
 import javafx.scene.text.FontWeight.BOLD
 import tornadofx.*

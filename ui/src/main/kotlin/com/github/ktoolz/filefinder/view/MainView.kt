@@ -1,10 +1,9 @@
-package com.github.ktoolz.view
+package com.github.ktoolz.filefinder.view
 
-import com.github.ktoolz.controller.load
-import com.github.ktoolz.model.SearchQuery
-import com.github.ktoolz.model.SearchResult
-import com.github.ktoolz.model.search
-import com.github.ktoolz.parser.ContextParser
+import com.github.ktoolz.filefinder.controller.load
+import com.github.ktoolz.filefinder.controller.search
+import com.github.ktoolz.filefinder.model.SearchResult
+import com.github.ktoolz.filefinder.parser.ContextParser
 import com.sun.javafx.collections.ObservableListWrapper
 import javafx.beans.property.SimpleStringProperty
 import javafx.scene.control.TableView
@@ -14,24 +13,14 @@ import javafx.scene.layout.BorderPane
 import tornadofx.*
 import java.io.File
 
-// TODO move to dedicated project
-inline fun <T> T.use(block: (T) -> Unit): T = apply { block(this) }
-
-// TODO move to dedicated project
-inline fun <reified T> Any.castUse(clazz: Class<T>, block: T.() -> Unit) {
-    if (this is T) block(this)
-}
-
 class MainView : View() {
 
     override val root: BorderPane = BorderPane()
 
-    val minScore = -3
+    val MAX_ITEMS_TO_DISPLAY = 15
 
     lateinit var files: List<File>
-
     val search = SimpleStringProperty()
-
     val result = ObservableListWrapper<SearchResult>(mutableListOf<SearchResult>())
 
     val table: TableView<SearchResult> by lazy {
@@ -52,7 +41,8 @@ class MainView : View() {
                 null -> result.clear()
                 else -> with(result) {
                     clear()
-                    addAll(search(ContextParser(javaslang.collection.List.of("src")).parse(searchText)))
+                    addAll(files.search(ContextParser(javaslang.collection.List.empty()).parse(searchText)).take(
+                            MAX_ITEMS_TO_DISPLAY))
                 }
             }
         }
@@ -64,14 +54,6 @@ class MainView : View() {
                     id = "inputSearch"
                     setOnKeyPressed { event ->
                         when (event.code) {
-                        //                            DOWN -> scene.lookup("#tableView").use { lookup ->
-                        //                                when (lookup) {
-                        //                                    is TableView<*> -> lookup.apply {
-                        //                                        selectFirst()
-                        //                                        requestFocus()
-                        //                                    }
-                        //                                }
-                        //                            }
                             DOWN -> table.apply {
                                 selectFirst()
                                 requestFocus()
@@ -91,7 +73,7 @@ class MainView : View() {
                     setOnKeyPressed { event ->
                         when (event.code) {
                             UP, PAGE_UP, HOME -> if (this.selectedItem == result.first()) inputSearch.requestFocus()
-                            ESCAPE -> scene.lookup("#inputSearch").requestFocus()
+                            ESCAPE -> inputSearch.requestFocus()
                             LEFT, RIGHT -> println("Display action menu!") // TODO display the menu
                         }
                     }
@@ -100,18 +82,11 @@ class MainView : View() {
                         browse(it)
                     }
                 }
-
-
-                //add(table.apply { id... })
             }
         }
 
-        runAsync { files = load(File("..")) } success { println("Loaded!") } ui { inputSearch.isDisable = false }
-
+        runAsync { files = load(File("..")) } ui { inputSearch.isDisable = false }
     }
-
-    private fun search(query: SearchQuery) = files.search(query).take(15)
-
 
     /**
      * Open the selected bookmark in a new browser window

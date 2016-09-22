@@ -1,7 +1,7 @@
-package com.github.ktoolz.parser
+package com.github.ktoolz.filefinder.parser
 
-import com.github.ktoolz.model.FilterQuery
-import com.github.ktoolz.model.SearchQuery
+import com.github.ktoolz.filefinder.model.FilterQuery
+import com.github.ktoolz.filefinder.model.SearchQuery
 import javaslang.collection.List
 
 class ContextParser(val filterNames: List<String>,
@@ -72,15 +72,15 @@ class ContextParser(val filterNames: List<String>,
 
 
     /**
-     * We are reading a filter ('!' char)
+     * We are reading a filterDirectories ('!' char)
      *
-     * # Read the filter identifier
-     * # Check if it's a valid filter name
+     * # Read the filterDirectories identifier
+     * # Check if it's a valid filterDirectories name
      * ## If yes, add it, then process the rest of the string as normal String (neutral state)
      * ## If no, trigger backtracking
      *
      * If End of Stream reached, the special char was the last one of the query.
-     * Call backtracking to process this char normally (it's not a filter)
+     * Call backtracking to process this char normally (it's not a filterDirectories)
      */
     private fun filter(list: List<Char>,
                        query: MutableQuery,
@@ -100,15 +100,15 @@ class ContextParser(val filterNames: List<String>,
 
 
     /**
-     * We are reading a filter ('/' char)
+     * We are reading a filterDirectories ('/' char)
      *
-     * # Read the directory filter
-     * # Check if it's a valid directory filter (can contains '/')
+     * # Read the directory filterDirectories
+     * # Check if it's a valid directory filterDirectories (can contains '/')
      * ## If yes, add it, then process the rest of the string as normal String (neutral state)
      * ## If no, trigger backtracking
      *
      * If End of Stream reached, the special char was the last one of the query.
-     * Call backtracking to process this char normally (it's not a filter)
+     * Call backtracking to process this char normally (it's not a filterDirectories)
      */
     private fun directory(list: List<Char>, query: MutableQuery, backtracking: () -> MutableQuery): MutableQuery =
             if (list.isEmpty) backtracking()
