@@ -19,6 +19,7 @@ import java.io.File
  */
 data class SearchResult(val matchers: List<PatternMatcher<Char>>, val file: File) {
     val filename: String by lazy { file.name }
+    // TODO: enhance the score calculation by taking care of distance
     val score: Int = matchers.foldLeft(0) {
         found, pattern ->
         if (pattern.match) found + 1 else found - 1

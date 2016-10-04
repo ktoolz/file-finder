@@ -19,9 +19,11 @@ import com.sun.javafx.collections.ObservableListWrapper
 import javafx.beans.property.SimpleStringProperty
 import javafx.scene.control.TableView
 import javafx.scene.control.TextField
+import javafx.scene.input.Clipboard
 import javafx.scene.input.KeyCode.*
 import javafx.scene.layout.BorderPane
 import tornadofx.*
+import java.awt.Desktop
 import java.io.File
 
 class MainView : View() {
@@ -69,6 +71,8 @@ class MainView : View() {
                                 selectFirst()
                                 requestFocus()
                             }
+                            ENTER -> if (result.isNotEmpty()) open(result[0])
+                            B -> if (event.isControlDown && result.isNotEmpty()) browse(result[0])
                         }
                     }
                 }
@@ -85,12 +89,14 @@ class MainView : View() {
                         when (event.code) {
                             UP, PAGE_UP, HOME -> if (this.selectedItem == result.first()) inputSearch.requestFocus()
                             ESCAPE -> inputSearch.requestFocus()
-                            LEFT, RIGHT -> println("Display action menu!") // TODO display the menu
+                            B -> browse(selectedItem)
+                            O -> open(selectedItem)
+                            C -> if (event.isControlDown) copy(selectedItem)
                         }
                     }
 
                     onUserSelect {
-                        browse(it)
+                        open(it)
                     }
                 }
             }
@@ -100,10 +106,29 @@ class MainView : View() {
     }
 
     /**
-     * Open the selected bookmark in a new browser window
+     * Open the parent folder of a file in the default application
      */
-    private fun browse(result: SearchResult) {
-        log.info { "Browsing ${result.filename}..." }
-        //getDesktop().browse(result.file.parentFile.toURI())
+    private fun browse(result: SearchResult?) {
+        if (result != null) {
+            runAsync { Desktop.getDesktop().open(result.file.parentFile) }
+        }
+    }
+
+    /**
+     * Open the selected file in the default application
+     */
+    private fun open(result: SearchResult?) {
+        if (result != null) {
+            runAsync { Desktop.getDesktop().open(result.file) }
+        }
+    }
+
+    /**
+     * Copy in the clipboard the path of selected file
+     */
+    private fun copy(result: SearchResult?) {
+        if (result != null) {
+            Clipboard.getSystemClipboard().putString(result.file.canonicalPath)
+        }
     }
 }
