@@ -11,8 +11,11 @@
  */
 package com.github.ktoolz.filefinder
 
+import com.github.ktoolz.filefinder.utils.Configuration
+import com.github.ktoolz.filefinder.utils.toFiles
 import com.github.ktoolz.filefinder.view.MainView
 import javafx.application.Application
+import javafx.stage.Stage
 import tornadofx.App
 import tornadofx.importStylesheet
 
@@ -20,7 +23,12 @@ class FileFinderApp : App(MainView::class) {
     init {
         importStylesheet(Styles::class)
     }
+
+    override fun start(stage: Stage) {
+        Configuration.directories = parameters.unnamed.toFiles()
+    }
 }
+
 fun main(args: Array<String>) {
     Application.launch(FileFinderApp::class.java, *args)
 }

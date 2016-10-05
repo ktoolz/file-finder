@@ -11,10 +11,11 @@
  */
 package com.github.ktoolz.filefinder.view
 
-import com.github.ktoolz.filefinder.controller.load
+import com.github.ktoolz.filefinder.controller.loadAll
 import com.github.ktoolz.filefinder.controller.search
 import com.github.ktoolz.filefinder.model.SearchResult
 import com.github.ktoolz.filefinder.parser.ContextParser
+import com.github.ktoolz.filefinder.utils.Configuration
 import com.sun.javafx.collections.ObservableListWrapper
 import javafx.beans.property.SimpleStringProperty
 import javafx.scene.control.TableView
@@ -102,7 +103,7 @@ class MainView : View() {
             }
         }
 
-        runAsync { files = load(File("..")) } ui { inputSearch.isDisable = false }
+        runAsync { files = loadAll(*Configuration.directories.toTypedArray()) } ui { inputSearch.isDisable = false }
     }
 
     /**

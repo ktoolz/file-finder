@@ -18,6 +18,15 @@ import javaslang.Tuple3
 import java.io.File
 
 /**
+ * Loads a lit of Files from a list of several directories
+ */
+fun loadAll(vararg root: File): List<File> =
+        when {
+            root.isEmpty() -> listOf()
+            else -> load(root.first()) + loadAll(*root.drop(1).toTypedArray())
+        }
+
+/**
  * Loads a list of Files from a particular directory
  */
 fun load(root: File): List<File> =
