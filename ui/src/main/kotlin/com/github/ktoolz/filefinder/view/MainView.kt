@@ -73,6 +73,7 @@ class MainView : View() {
                                 requestFocus()
                             }
                             ENTER -> if (result.isNotEmpty()) open(result[0])
+                            O -> if (event.isControlDown && result.isNotEmpty()) open(result[0])
                             B -> if (event.isControlDown && result.isNotEmpty()) browse(result[0])
                         }
                     }
