@@ -25,13 +25,21 @@ fun <T> List<T>.matchers(pattern: List<T>,
             else ->
                 dropWhile { it != pattern.head() }.let { remainder ->
                     if (remainder.isEmpty) this@matchers.matchers(pattern.tail(),
-                                                    matchers.append(PatternMatcher(pattern.head(),
-                                                                                   false,
-                                                                                   Optional.empty())))
-                    else remainder.tail().matchers(pattern.tail(),
-                                                   matchers.append(PatternMatcher(pattern.head(),
-                                                                                  true,
-                                                                                  Optional.of(indexOf(pattern.head())))))
+                                                                  matchers.append(PatternMatcher(pattern.head(),
+                                                                                                 false,
+                                                                                                 Optional.empty())))
+                    else if (indexOf(pattern.head()) > 0 && matchers.takeRight(2).foldRight(0) { element, distance ->
+                        distance + element.distance.orElse(1)
+                    } == 0)
+                        this@matchers.matchers(pattern.tail(),
+                                               matchers.append(PatternMatcher(pattern.head(),
+                                                                              true,
+                                                                              Optional.of(indexOf(pattern.head())))))
+                    else
+                        remainder.tail().matchers(pattern.tail(),
+                                                  matchers.append(PatternMatcher(pattern.head(),
+                                                                                 true,
+                                                                                 Optional.of(indexOf(pattern.head())))))
 
                 }
         }
