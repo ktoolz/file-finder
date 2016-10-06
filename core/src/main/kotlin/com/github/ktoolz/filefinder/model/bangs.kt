@@ -35,5 +35,5 @@ class SourceBang : Bang {
 class TargetBang : Bang {
     override val name = "target"
 
-    override fun filter(result: SearchResult) = !result.file.canonicalPath.contains("/target/")
+    override fun filter(result: SearchResult) = result.file.canonicalPath.contains("/target/")
 }

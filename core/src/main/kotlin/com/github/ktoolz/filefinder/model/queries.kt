@@ -20,5 +20,5 @@ data class SearchQuery(val term: String, val bangs: List<BangQuery>, val directo
             directories.forAll { searchResult.file.parentFile.absolutePath?.contains("/$it") ?: false }
 
     fun filterBangs(searchResult: SearchResult): Boolean =
-            bangs.forAll { !it.negated && it.bang.filter(searchResult) }
+            bangs.forAll { it.negated xor it.bang.filter(searchResult) }
 }

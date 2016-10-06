@@ -31,3 +31,4 @@ fun Iterable<File>.search(searchQuery: SearchQuery) =
                 .filter { searchQuery.filterDirectories(it) }
                 .filter { searchQuery.filterBangs(it) }
                 .sortedBy { Tuple3(-it.score, it.filename.length, it.filename) }
+
