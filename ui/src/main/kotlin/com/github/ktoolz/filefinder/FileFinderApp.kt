@@ -11,7 +11,7 @@
  */
 package com.github.ktoolz.filefinder
 
-import com.github.ktoolz.filefinder.utils.Configuration
+import com.github.ktoolz.filefinder.utils.ExecutionContext
 import com.github.ktoolz.filefinder.utils.toFiles
 import com.github.ktoolz.filefinder.view.MainView
 import javafx.application.Application
@@ -25,7 +25,7 @@ class FileFinderApp : App(MainView::class) {
     }
 
     override fun start(stage: Stage) {
-        Configuration.directories = parameters.unnamed.toFiles()
+        ExecutionContext.directories = parameters.unnamed.toFiles()
         super.start(stage)
     }
 }
