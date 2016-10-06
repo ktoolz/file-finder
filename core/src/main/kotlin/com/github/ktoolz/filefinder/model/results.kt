@@ -26,11 +26,4 @@ data class SearchResult(val matchers: List<PatternMatcher<Char>>, val file: File
     }
 }
 
-data class FilterQuery(val name: String, val negated: Boolean = false)
-
-data class SearchQuery(val term: String, val contexts: List<FilterQuery>, val directories: List<String>) {
-    fun filterDirectories(searchResult: SearchResult): Boolean =
-            directories.forAll { searchResult.file.parentFile.absolutePath?.contains("/$it") ?: false }
-}
-
 class PatternMatcher<out T>(val element: T, val match: Boolean, val distance: Int)

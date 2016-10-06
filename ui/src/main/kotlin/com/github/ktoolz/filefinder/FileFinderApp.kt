@@ -26,6 +26,7 @@ class FileFinderApp : App(MainView::class) {
 
     override fun start(stage: Stage) {
         Configuration.directories = parameters.unnamed.toFiles()
+        super.start(stage)
     }
 }
 
