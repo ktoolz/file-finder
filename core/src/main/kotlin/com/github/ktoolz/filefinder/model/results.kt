@@ -13,17 +13,27 @@ package com.github.ktoolz.filefinder.model
 
 import javaslang.collection.List
 import java.io.File
+import java.util.*
 
 /**
  * Store a search result
  */
 data class SearchResult(val matchers: List<PatternMatcher<Char>>, val file: File) {
     val filename: String by lazy { file.name }
-    // TODO: enhance the score calculation by taking care of distance
     val score: Int = matchers.foldLeft(0) {
-        found, pattern ->
-        if (pattern.match) found + 1 else found - 1
+        score, pattern ->
+        when {
+        // pattern doesn't match, score loses 2 points
+            !pattern.match -> score - 2
+        // pattern distance is max 0 (meaning letters are following each other)
+        // (meaning also that pattern is found btw) - score will be 2 (cause found) + 1 (cause small distance)
+            pattern.distance.isPresent && pattern.distance.get() < 1 -> score + 2 + 1
+        // pattern distance is more than half the word (meaning that pattern is found again) - score will be 2 (cause found) - 1 (cause big distance)
+            pattern.distance.isPresent && pattern.distance.get() > filename.length / 2 -> score + 2 - 1
+        // else will be when pattern matches, but distance is not in previsouly mentionned range - score will be 2
+            else -> score + 2
+        }
     }
 }
 
-class PatternMatcher<out T>(val element: T, val match: Boolean, val distance: Int)
+class PatternMatcher<out T>(val element: T, val match: Boolean, val distance: Optional<Int>)

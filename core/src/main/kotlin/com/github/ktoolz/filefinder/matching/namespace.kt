@@ -13,6 +13,7 @@ package com.github.ktoolz.filefinder.matching
 
 import com.github.ktoolz.filefinder.model.PatternMatcher
 import javaslang.collection.List
+import java.util.*
 
 /**
  * Computes a List of PatternMatcher elements out of a List, while searching for a Pattern.
@@ -23,12 +24,14 @@ fun <T> List<T>.matchers(pattern: List<T>,
             pattern.isEmpty -> matchers
             else ->
                 dropWhile { it != pattern.head() }.let { remainder ->
-                    if (remainder.isEmpty) matchers(pattern.tail(),
-                                                    matchers.append(PatternMatcher(pattern.head(), false, 0)))
+                    if (remainder.isEmpty) this@matchers.matchers(pattern.tail(),
+                                                    matchers.append(PatternMatcher(pattern.head(),
+                                                                                   false,
+                                                                                   Optional.empty())))
                     else remainder.tail().matchers(pattern.tail(),
                                                    matchers.append(PatternMatcher(pattern.head(),
                                                                                   true,
-                                                                                  indexOf(pattern.head()))))
+                                                                                  Optional.of(indexOf(pattern.head())))))
 
                 }
         }
