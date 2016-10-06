@@ -11,12 +11,16 @@
  */
 package com.github.ktoolz.filefinder.parser
 
-import com.github.ktoolz.filefinder.model.FilterQuery
+import com.github.ktoolz.filefinder.model.Bang
+import com.github.ktoolz.filefinder.model.BangQuery
 import com.github.ktoolz.filefinder.model.SearchQuery
 import javaslang.collection.List
 
-class ContextParser(val filterNames: List<String>,
-                    val filterSpecialChar: Char = '!',
+fun List<Bang>.names() = this.map { it.name }
+fun List<Bang>.findBang(name: String) = this.find { it.name.equals(name) }.get()
+
+class ContextParser(val bangsReferences: List<Bang>,
+                    val bangsIdentifier: Char = '!',
                     val directorySpecialChar: Char = '/') {
 
     /**
@@ -24,12 +28,12 @@ class ContextParser(val filterNames: List<String>,
      */
     private class MutableQuery(val term: MutableList<Char> = mutableListOf(),
                                val directories: MutableList<List<Char>> = mutableListOf(),
-                               val modifiers: MutableList<FilterQuery> = mutableListOf()) {
+                               val bangs: MutableList<BangQuery> = mutableListOf()) {
 
-        override fun toString(): String = "$term, $directories, $modifiers"
+        override fun toString(): String = "$term, $directories, $bangs"
 
         fun toQuery() = SearchQuery(term.joinToString("").trim(),
-                                    List.ofAll(modifiers),
+                                    List.ofAll(bangs),
                                     List.ofAll(directories.map { it.mkString("") }))
     }
 
@@ -58,7 +62,7 @@ class ContextParser(val filterNames: List<String>,
             if (list.isEmpty) query
             else when (list.head()) {
                 ' ' -> pendingSpace(list.tail(), query) { query(list, query) }
-                filterSpecialChar -> filter(list.tail(), query) { query(list, query) }
+                bangsIdentifier -> filter(list.tail(), query) { query(list, query) }
                 directorySpecialChar -> directory(list.tail(), query) { query(list, query) }
                 else -> query(list, query)
             }
@@ -76,7 +80,7 @@ class ContextParser(val filterNames: List<String>,
             if (list.isEmpty) query // do nothing as trailing space is ignored
             else when (list.head()) {
                 ' ' -> pendingSpace(list.tail(), query, backtracking)
-                filterSpecialChar -> filter(list.tail(), query, backtracking = backtracking)
+                bangsIdentifier -> filter(list.tail(), query, backtracking = backtracking)
                 directorySpecialChar -> directory(list.tail(), query, backtracking)
                 else -> backtracking()
             }
@@ -98,11 +102,11 @@ class ContextParser(val filterNames: List<String>,
                        negated: Boolean = false,
                        backtracking: () -> MutableQuery): MutableQuery =
             if (list.isEmpty) backtracking()
-            else if (list.head() == filterSpecialChar) filter(list.tail(), query, !negated, backtracking)
+            else if (list.head() == bangsIdentifier) filter(list.tail(), query, !negated, backtracking)
             else {
                 val split = list.splitAt { it.isTokenSeparator() }
-                if (filterNames.contains(split._1.mkString())) {
-                    query.modifiers.add(FilterQuery(split._1.mkString(), negated))
+                if (bangsReferences.names().contains(split._1.mkString())) {
+                    query.bangs.add(BangQuery(bangsReferences.findBang(split._1.mkString()), negated))
                     neutral(split._2, query)
                 } else {
                     backtracking()

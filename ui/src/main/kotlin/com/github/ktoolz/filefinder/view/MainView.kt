@@ -14,6 +14,7 @@ package com.github.ktoolz.filefinder.view
 import com.github.ktoolz.filefinder.controller.loadAll
 import com.github.ktoolz.filefinder.controller.search
 import com.github.ktoolz.filefinder.model.SearchResult
+import com.github.ktoolz.filefinder.model.registeredBangs
 import com.github.ktoolz.filefinder.parser.ContextParser
 import com.github.ktoolz.filefinder.utils.ExecutionContext
 import com.sun.javafx.collections.ObservableListWrapper
@@ -55,7 +56,7 @@ class MainView : View() {
                 null -> result.clear()
                 else -> with(result) {
                     clear()
-                    addAll(files.search(ContextParser(javaslang.collection.List.empty()).parse(searchText)).take(
+                    addAll(files.search(ContextParser(registeredBangs()).parse(searchText)).take(
                             MAX_ITEMS_TO_DISPLAY))
                 }
             }

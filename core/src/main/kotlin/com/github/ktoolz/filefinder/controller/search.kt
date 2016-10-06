@@ -16,5 +16,7 @@ fun Iterable<File>.search(searchQuery: SearchQuery) =
         map { file ->
             val lowerCaseName = file.name.toLowerCase()
             SearchResult(lowerCaseName.matchers(searchQuery.term.toLowerCase()), file)
-        }.filter { searchQuery.filterDirectories(it) }
+        }
+                .filter { searchQuery.filterDirectories(it) }
+                .filter { searchQuery.filterBangs(it) }
                 .sortedBy { Tuple3(-it.score, it.filename.length, it.filename) }

@@ -14,7 +14,7 @@ package com.github.ktoolz.filefinder.controller
 import java.io.File
 
 /**
- * Loads a lit of Files from a list of several directories
+ * Loads a lit of Files from a results of several directories
  */
 fun loadAll(vararg root: File): List<File> =
         when {
@@ -23,7 +23,7 @@ fun loadAll(vararg root: File): List<File> =
         }
 
 /**
- * Loads a list of Files from a particular directory
+ * Loads a results of Files from a particular directory
  */
 fun load(root: File): List<File> =
         when {

@@ -6,7 +6,7 @@ A simple tool allowing to search efficiently for files on your computer.
 
 File-Finder aims at easing file research by letting you search files from a pattern instead of a complete name. For example, you could use `dbm` to search for a file called `DatabaseManager` on your computer, and it would find it.
 
-Our goal is to also make it tolerant to typos and to make it provide you with a list of suggestions of the files you were searching for.
+Our goal is to also make it tolerant to typos and to make it provide you with a results of suggestions of the files you were searching for.
 
 ## License
 
