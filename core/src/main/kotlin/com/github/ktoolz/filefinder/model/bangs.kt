@@ -11,9 +11,10 @@
  */
 package com.github.ktoolz.filefinder.model
 
+import com.github.ktoolz.filefinder.utils.ExecutionContext
 import javaslang.collection.List
 
-fun registeredBangs() = List.of(TargetBang(), SourceBang())
+fun registeredBangs() = List.of(TargetBang(), SourceBang(), IgnoredBang())
 
 interface Bang {
     val name: String
@@ -36,4 +37,13 @@ class TargetBang : Bang {
     override val name = "target"
 
     override fun filter(result: SearchResult) = result.file.canonicalPath.contains("/target/")
+}
+
+class IgnoredBang : Bang {
+    override val name = "ignored"
+
+    override fun filter(result: SearchResult) = ExecutionContext.ignored.fold(false) {
+        keep, extension ->
+        keep || result.filename.endsWith(".$extension")
+    }
 }

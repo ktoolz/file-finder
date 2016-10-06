@@ -12,9 +12,32 @@
 package com.github.ktoolz.filefinder.utils
 
 import java.io.File
+import java.util.*
 
 fun List<String>.toFiles() = this.map { File(it) }
 
 object ExecutionContext {
-    var directories: List<File> = listOf()
+    val properties: Properties
+    val directories: MutableSet<File>
+    val ignored: Set<String>
+
+    init {
+        properties = loadDotFile()
+        directories = properties.getProperty("directories", "").splitParts().toFiles().toMutableSet()
+        ignored = properties.getProperty("ignored","").splitParts().toSet()
+    }
+
+    fun String.splitParts() = this.split(",").toList().map { it.trim() }
+}
+
+fun loadDotFile(): Properties {
+    val properties = Properties()
+    val homedir = System.getProperty("user.home")
+    if (homedir != null) {
+        val dotfile = File("$homedir/.filefinder")
+        if (dotfile.exists()) {
+            properties.load(dotfile.inputStream())
+        }
+    }
+    return properties
 }
