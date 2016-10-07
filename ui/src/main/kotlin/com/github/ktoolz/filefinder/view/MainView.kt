@@ -87,8 +87,8 @@ class MainView : View() {
                 tableview(result) {
                     id = "tableView"
                     column("Score", SearchResult::score).prefWidth = 50.0
-                    column("File", SearchResult::filename).prefWidth = 150.0
-                    column("Path", SearchResult::file).prefWidth = 500.0
+                    column("File", SearchResult::filename).prefWidth = 250.0
+                    column("Path", SearchResult::file).prefWidth = 600.0
 
                     setOnKeyPressed { event ->
                         when (event.code) {

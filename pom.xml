@@ -304,7 +304,6 @@
                         </filter>
                     </filters>
                 </configuration>
-
                 <executions>
                     <execution>
                         <phase>package</phase>
