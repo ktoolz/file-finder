@@ -21,6 +21,7 @@ import com.sun.javafx.collections.ObservableListWrapper
 import javafx.beans.property.SimpleStringProperty
 import javafx.scene.control.TableView
 import javafx.scene.control.TextField
+import javafx.scene.image.Image
 import javafx.scene.input.Clipboard
 import javafx.scene.input.KeyCode.*
 import javafx.scene.layout.BorderPane
@@ -50,6 +51,7 @@ class MainView : View() {
 
     init {
         title = messages["title"]
+        addStageIcon(Image(MainView::class.java.getResourceAsStream("/icon.png")))
 
         search.onChange { searchText ->
             when (searchText) {
