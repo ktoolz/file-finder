@@ -9,26 +9,32 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.github.ktoolz.filefinder.utils
+package com.github.ktoolz.filefinder.parser
 
-fun <T> List<T>.toJavaslang() = javaslang.collection.List.ofAll(this)!!
-fun String.toJavaslangList() = toList().toJavaslang()
+import com.github.ktoolz.filefinder.matching.matchers
+import com.github.ktoolz.filefinder.utils.toJavaslangList
+import javaslang.collection.List
+import org.assertj.core.api.Assertions.assertThat
+import org.jetbrains.spek.api.Spek
 
-fun time(block: () -> Any): Pair<Any, Long> {
-    val now = System.currentTimeMillis()
-    val result = block()
-    val elapsed = System.currentTimeMillis() - now
-    return result to elapsed
+class MatcherSpecs : Spek() { init {
+
+    given("the list a,x,b,x,c,x,d,x,e") {
+        val inputList = "abcde".toJavaslangList().intersperse('x')
+        println(inputList)
+
+        on("matching list e,b,c") {
+            val search = "ebc".toJavaslangList()
+            val searchResult = inputList.matchers(search, List.empty())
+
+            println(searchResult)
+
+            it("should contains at least one error") {
+                assertThat(searchResult.filter { !it.match }.size()).isGreaterThan(0)
+            }
+        }
+    }
+
+}
 }
 
-fun banner(block: () -> Any) {
-    println("---------------------------------------")
-    println(block())
-    println("---------------------------------------")
-}
-
-inline fun <T> T.use(block: (T) -> Unit): T = apply { block(this) }
-
-inline fun <reified T> Any.castUse(block: T.() -> Unit) {
-    if (this is T) block(this)
-}

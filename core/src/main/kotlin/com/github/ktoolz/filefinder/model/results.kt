@@ -36,4 +36,4 @@ data class SearchResult(val matchers: List<PatternMatcher<Char>>, val file: File
     }
 }
 
-class PatternMatcher<out T>(val element: T, val match: Boolean, val distance: Optional<Int>)
+data class PatternMatcher<out T>(val element: T, val match: Boolean, val distance: Optional<Int>)
