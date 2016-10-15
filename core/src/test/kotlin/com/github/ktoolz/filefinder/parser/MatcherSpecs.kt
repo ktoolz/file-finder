@@ -38,6 +38,15 @@ class MatcherSpecs : Spek() { init {
                 assertThat(searchResult.filter { !it.match }).hasSize(1)
             }
         }
+
+        on("matching empty list") {
+            val search = "".toJavaslangList()
+            val searchResult = inputList.matchers(search)
+
+            it("should contains no error") {
+                assertThat(searchResult.filter { !it.match }).hasSize(0)
+            }
+        }
     }
 
 }

@@ -49,7 +49,6 @@ fun <T> List<T>.matchers(searchQuery: List<T>): List<MatchResult<T>> {
             this.search(ngram, List.empty())
         }
 
-        // TODO deal with multiple results with the same 'score'. For now, keep the first one
         val bestMatch = ngramsMatchResults.sortBy { matchResultsOfNgram ->
             // count the number of matches and inverse it to sort from biggest to smallest
             -matchResultsOfNgram.filter(MatchResult<T>::match).size()
