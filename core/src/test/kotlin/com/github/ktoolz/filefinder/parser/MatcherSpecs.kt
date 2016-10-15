@@ -13,6 +13,7 @@ package com.github.ktoolz.filefinder.parser
 
 import com.github.ktoolz.filefinder.matching.matchers
 import com.github.ktoolz.filefinder.utils.toJavaslangList
+import javaslang.collection.List
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.spek.api.Spek
 
@@ -24,21 +25,13 @@ class MatcherSpecs : Spek() { init {
 
         on("matching list a,b,c") {
             val search = "abc".toJavaslangList()
-            val searchResult = inputList.matchers(search)
+            val searchResult = inputList.matchers(search, List.empty())
 
             it("should contains no error") {
                 assertThat(searchResult.filter { !it.match }).hasSize(0)
             }
         }
 
-        on("matching list e,b,c") {
-            val search = "ebc".toJavaslangList()
-            val searchResult = inputList.matchers(search)
-
-            it("should contains one error") {
-                assertThat(searchResult.filter { !it.match }).hasSize(1)
-            }
-        }
     }
 
 }
