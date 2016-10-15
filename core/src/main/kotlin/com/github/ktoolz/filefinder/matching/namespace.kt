@@ -11,41 +11,64 @@
  */
 package com.github.ktoolz.filefinder.matching
 
-import com.github.ktoolz.filefinder.model.PatternMatcher
+import com.github.ktoolz.filefinder.model.MatchResult
 import javaslang.collection.List
 import java.util.*
 
 /**
- * Computes a List of PatternMatcher elements out of a List, while searching for a Pattern.
+ * Computes a List of MatchResult elements out of a List, while searching for a Pattern.
  */
-fun <T> List<T>.matchers(pattern: List<T>,
-                         matchers: List<PatternMatcher<T>>): List<PatternMatcher<T>> =
-        when {
-            pattern.isEmpty -> matchers
-            else ->
-                dropWhile { it != pattern.head() }.let { remainder ->
-                    if (remainder.isEmpty) this@matchers.matchers(pattern.tail(),
-                                                                  matchers.append(PatternMatcher(pattern.head(),
-                                                                                                 false,
-                                                                                                 Optional.empty())))
-                    else if (indexOf(pattern.head()) > 0 && matchers.takeRight(2).foldRight(0) { element, distance ->
-                        distance + element.distance.orElse(1)
-                    } == 0)
-                        this@matchers.matchers(pattern.tail(),
-                                               matchers.append(PatternMatcher(pattern.head(),
-                                                                              true,
-                                                                              Optional.of(indexOf(pattern.head())))))
-                    else
-                        remainder.tail().matchers(pattern.tail(),
-                                                  matchers.append(PatternMatcher(pattern.head(),
-                                                                                 true,
-                                                                                 Optional.of(indexOf(pattern.head())))))
+fun <T> List<T>.matchers(searchQuery: List<T>): List<MatchResult<T>> {
 
+    /**
+     * Accumulate MatchResult
+     */
+    fun <T> List<T>.search(searchPattern: List<T>,
+                           accumulator: List<MatchResult<T>>): List<MatchResult<T>> =
+            when {
+                searchPattern.isEmpty -> accumulator
+                else -> {
+                    val lookupItem = searchPattern.head()
+                    val remainder = dropWhile { it != lookupItem }
+                    if (remainder.isEmpty) {
+                        // not found
+                        val distance = Optional.empty<Int>()
+                        val matchResult = MatchResult(lookupItem, false, distance)
+                        this@search.search(searchPattern.tail(), accumulator.append(matchResult))
+                    } else {
+                        // found
+                        val distance = Optional.of(indexOf(lookupItem))
+                        val matchResult = MatchResult(lookupItem, true, distance)
+                        remainder.tail().search(searchPattern.tail(), accumulator.append(matchResult))
+                    }
                 }
+            }
+
+    fun <T> List<T>.nGramsSearch(searchQuery: List<T>): List<MatchResult<T>> {
+        val ngramsMatchResults = searchQuery.combinations().map { ngram ->
+            this.search(ngram, List.empty())
         }
+
+        // TODO deal with multiple results with the same 'score'. For now, keep the first one
+        val bestMatch = ngramsMatchResults.sortBy { matchResultsOfNgram ->
+            // count the number of matches and inverse it to sort from biggest to smallest
+            -matchResultsOfNgram.filter(MatchResult<T>::match).size()
+        }.head()
+
+        // As the N-Gram can contains less elements than the search query, replace missing elements
+        // by a 'not found' match result
+        fun T.notFound() = MatchResult(this, false, Optional.empty())
+        return searchQuery.map { searchQueryItem: T ->
+            bestMatch.find { it.element == searchQueryItem }.getOrElse(searchQueryItem.notFound())
+        }
+
+    }
+
+    return nGramsSearch(searchQuery)
+}
 
 /**
  * Extension of a String to allow Pattern Matching from another String.
  */
-fun String.matchers(s: String): List<PatternMatcher<Char>> =
-        List.ofAll(toCharArray()).matchers(List.ofAll(s.toCharArray()), List.empty())
+fun String.matchers(s: String): List<MatchResult<Char>> =
+        List.ofAll(toCharArray()).matchers(List.ofAll(s.toCharArray()))
