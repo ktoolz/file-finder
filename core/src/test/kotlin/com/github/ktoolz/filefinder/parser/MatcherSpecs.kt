@@ -13,6 +13,7 @@ package com.github.ktoolz.filefinder.parser
 
 import com.github.ktoolz.filefinder.matching.matchers
 import com.github.ktoolz.filefinder.utils.toJavaslangList
+import javaslang.collection.List
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.spek.api.Spek
 
