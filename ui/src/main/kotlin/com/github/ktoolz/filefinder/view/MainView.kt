@@ -13,7 +13,7 @@ package com.github.ktoolz.filefinder.view
 
 import com.github.ktoolz.filefinder.controller.loadAll
 import com.github.ktoolz.filefinder.controller.search
-import com.github.ktoolz.filefinder.model.SearchResult
+import com.github.ktoolz.filefinder.model.FileSearchResult
 import com.github.ktoolz.filefinder.model.registeredBangs
 import com.github.ktoolz.filefinder.parser.ContextParser
 import com.github.ktoolz.filefinder.utils.ExecutionContext
@@ -37,11 +37,11 @@ class MainView : View() {
 
     lateinit var files: List<File>
     val search = SimpleStringProperty()
-    val result = ObservableListWrapper<SearchResult>(mutableListOf<SearchResult>())
+    val result = ObservableListWrapper<FileSearchResult>(mutableListOf<FileSearchResult>())
 
-    val table: TableView<SearchResult> by lazy {
+    val table: TableView<FileSearchResult> by lazy {
         @Suppress("UNCHECKED_CAST")
-        (root.scene.lookup("#tableView") as TableView<SearchResult>)
+        (root.scene.lookup("#tableView") as TableView<FileSearchResult>)
     }
 
     val inputSearch: TextField by lazy {
@@ -86,9 +86,9 @@ class MainView : View() {
             center {
                 tableview(result) {
                     id = "tableView"
-                    column("Score", SearchResult::score).prefWidth = 50.0
-                    column("File", SearchResult::filename).prefWidth = 250.0
-                    column("Path", SearchResult::file).prefWidth = 600.0
+                    column("Score", FileSearchResult::score).prefWidth = 50.0
+                    column("File", FileSearchResult::filename).prefWidth = 250.0
+                    column("Path", FileSearchResult::file).prefWidth = 600.0
 
                     setOnKeyPressed { event ->
                         when (event.code) {
@@ -113,7 +113,7 @@ class MainView : View() {
     /**
      * Open the parent folder of a file in the default application
      */
-    private fun browse(result: SearchResult?) {
+    private fun browse(result: FileSearchResult?) {
         if (result != null) {
             runAsync { Desktop.getDesktop().open(result.file.parentFile) }
         }
@@ -122,7 +122,7 @@ class MainView : View() {
     /**
      * Open the selected file in the default application
      */
-    private fun open(result: SearchResult?) {
+    private fun open(result: FileSearchResult?) {
         if (result != null) {
             runAsync { Desktop.getDesktop().open(result.file) }
         }
@@ -131,7 +131,7 @@ class MainView : View() {
     /**
      * Copy in the clipboard the path of selected file
      */
-    private fun copy(result: SearchResult?) {
+    private fun copy(result: FileSearchResult?) {
         if (result != null) {
             Clipboard.getSystemClipboard().putString(result.file.canonicalPath)
         }

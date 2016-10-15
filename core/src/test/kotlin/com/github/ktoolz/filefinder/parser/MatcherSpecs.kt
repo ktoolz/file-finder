@@ -20,7 +20,6 @@ class MatcherSpecs : Spek() { init {
 
     given("the list a,x,b,x,c,x,d,x,e") {
         val inputList = "abcde".toJavaslangList().intersperse('x')
-        println(inputList)
 
         on("matching list a,b,c") {
             val search = "abc".toJavaslangList()

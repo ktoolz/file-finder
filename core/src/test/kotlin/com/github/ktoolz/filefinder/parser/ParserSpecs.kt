@@ -13,7 +13,7 @@ package com.github.ktoolz.filefinder.parser
 
 import com.github.ktoolz.filefinder.model.Bang
 import com.github.ktoolz.filefinder.model.BangQuery
-import com.github.ktoolz.filefinder.model.SearchResult
+import com.github.ktoolz.filefinder.model.FileSearchResult
 import javaslang.collection.List
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.spek.api.Spek
@@ -152,10 +152,10 @@ class ParserSpecs : Spek() { init {
 
 class FooBang : Bang {
     override val name = "foo"
-    override fun filter(result: SearchResult) = true
+    override fun filter(result: FileSearchResult) = true
 }
 
 class GooBang: Bang {
     override val name = "goo"
-    override fun filter(result: SearchResult) = true
+    override fun filter(result: FileSearchResult) = true
 }

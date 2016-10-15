@@ -16,9 +16,9 @@ import javaslang.collection.List
 data class BangQuery(val bang: Bang, val negated: Boolean = false)
 
 data class SearchQuery(val term: String, val bangs: List<BangQuery>, val directories: List<String>) {
-    fun filterDirectories(searchResult: SearchResult): Boolean =
+    fun filterDirectories(searchResult: FileSearchResult): Boolean =
             directories.forAll { searchResult.file.parentFile.absolutePath?.contains("/$it") ?: false }
 
-    fun filterBangs(searchResult: SearchResult): Boolean =
+    fun filterBangs(searchResult: FileSearchResult): Boolean =
             bangs.forAll { it.negated xor it.bang.filter(searchResult) }
 }
