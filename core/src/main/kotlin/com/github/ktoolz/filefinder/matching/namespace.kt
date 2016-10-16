@@ -20,46 +20,57 @@ import java.util.*
  */
 fun <T> List<T>.matchers(searchQuery: List<T>): List<MatchResult<T>> {
 
-    /**
-     * Accumulate MatchResult
-     */
-    fun <T> List<T>.search(searchPattern: List<T>,
-                           accumulator: List<MatchResult<T>>): List<MatchResult<T>> =
+    tailrec fun <T> List<T>.matchExactly(searchPattern: List<T>,
+                                         acc: List<MatchResult<T>>): List<MatchResult<T>> =
             when {
-                searchPattern.isEmpty -> accumulator
+                searchPattern.isEmpty -> acc
                 else -> {
                     val lookupItem = searchPattern.head()
                     val remainder = dropWhile { it != lookupItem }
                     if (remainder.isEmpty) {
                         // not found
-                        val distance = Optional.empty<Int>()
-                        val matchResult = MatchResult(lookupItem, false, distance)
-                        this@search.search(searchPattern.tail(), accumulator.append(matchResult))
+                        List.empty<MatchResult<T>>()
                     } else {
                         // found
                         val distance = Optional.of(indexOf(lookupItem))
                         val matchResult = MatchResult(lookupItem, true, distance)
-                        remainder.tail().search(searchPattern.tail(), accumulator.append(matchResult))
+                        remainder.tail().matchExactly(searchPattern.tail(), acc.append(matchResult))
                     }
                 }
             }
 
     fun <T> List<T>.nGramsSearch(searchQuery: List<T>): List<MatchResult<T>> {
         val ngramsMatchResults = searchQuery.combinations().map { ngram ->
-            this.search(ngram, List.empty())
-        }
+            matchExactly(ngram, List.empty())
+        }.filter { it.nonEmpty() }
 
-        val bestMatch = ngramsMatchResults.sortBy { matchResultsOfNgram ->
+        // TODO deal with multiple results with the same 'score'. For now, keep the first one
+        val bestMatchOption = ngramsMatchResults.sortBy { matchResultsOfNgram ->
             // count the number of matches and inverse it to sort from biggest to smallest
             -matchResultsOfNgram.filter(MatchResult<T>::match).size()
-        }.head()
+        }.headOption().getOrElse(List.empty())
 
         // As the N-Gram can contains less elements than the search query, replace missing elements
         // by a 'not found' match result
         fun T.notFound() = MatchResult(this, false, Optional.empty())
-        return searchQuery.map { searchQueryItem: T ->
-            bestMatch.find { it.element == searchQueryItem }.getOrElse(searchQueryItem.notFound())
-        }
+
+        fun addMissings(searchQuery: List<T>,
+                        matchResults: List<MatchResult<T>>,
+                        acc: List<MatchResult<T>>): List<MatchResult<T>> =
+                when {
+                    searchQuery.isEmpty -> acc
+                    matchResults.isEmpty -> addMissings(searchQuery.tail(),
+                                                        matchResults,
+                                                        acc.append(searchQuery.head().notFound()))
+                    matchResults.head().element == searchQuery.head() -> addMissings(searchQuery.tail(),
+                                                                                     matchResults.tail(),
+                                                                                     acc.append(matchResults.head()))
+                    else -> addMissings(searchQuery.tail(),
+                                        matchResults,
+                                        acc.append(searchQuery.head().notFound()))
+                }
+
+        return addMissings(searchQuery, bestMatchOption, List.empty())
 
     }
 
