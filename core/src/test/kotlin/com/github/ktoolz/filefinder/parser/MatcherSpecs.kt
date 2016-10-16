@@ -39,6 +39,24 @@ class MatcherSpecs : Spek() { init {
             }
         }
 
+        on("matching list a,a") {
+            val search = "aa".toJavaslangList()
+            val searchResult = inputList.matchers(search)
+
+            it("should contains one error") {
+                assertThat(searchResult.filter { !it.match }).hasSize(1)
+            }
+        }
+
+        on("matching list b,a") {
+            val search = "ba".toJavaslangList()
+            val searchResult = inputList.matchers(search)
+
+            it("should contains one error") {
+                assertThat(searchResult.filter { !it.match }).hasSize(1)
+            }
+        }
+
         on("matching empty list") {
             val search = "".toJavaslangList()
             val searchResult = inputList.matchers(search)
