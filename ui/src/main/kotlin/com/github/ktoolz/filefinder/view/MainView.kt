@@ -24,12 +24,20 @@ import javafx.scene.control.TextField
 import javafx.scene.image.Image
 import javafx.scene.input.Clipboard
 import javafx.scene.input.KeyCode.*
+import javafx.scene.input.KeyEvent
 import javafx.scene.layout.BorderPane
 import tornadofx.*
 import java.awt.Desktop
+import java.awt.Event
 import java.io.File
 
 class MainView : View() {
+
+    val KeyEvent.isNoModifier: Boolean get() = !isAltDown && !isControlDown && !isMetaDown && !isShiftDown
+    val KeyEvent.isOnlyControlDown: Boolean get() = !isAltDown && isControlDown && !isMetaDown && !isShiftDown
+    val KeyEvent.isOnlyShiftDown: Boolean get() = !isAltDown && !isControlDown && !isMetaDown && isShiftDown
+    val KeyEvent.isOnlyAltDown: Boolean get() = isAltDown && !isControlDown && !isMetaDown && !isShiftDown
+    val KeyEvent.isOnlyMetaDown: Boolean get() = !isAltDown && !isControlDown && isMetaDown && !isShiftDown
 
     override val root: BorderPane = BorderPane()
 
@@ -91,12 +99,14 @@ class MainView : View() {
                     column("Path", SearchResult::file).prefWidth = 600.0
 
                     setOnKeyPressed { event ->
-                        when (event.code) {
-                            UP, PAGE_UP, HOME -> if (this.selectedItem == result.first()) inputSearch.requestFocus()
-                            ESCAPE -> inputSearch.requestFocus()
-                            B -> browse(selectedItem)
-                            O -> open(selectedItem)
-                            C -> if (event.isControlDown) copy(selectedItem)
+                        with(event) {
+                            when (code) {
+                                UP, PAGE_UP, HOME -> if (selectedItem == result.first()) inputSearch.requestFocus()
+                                ESCAPE -> inputSearch.requestFocus()
+                                B -> if (isNoModifier) browse(selectedItem)
+                                O -> if (isNoModifier) open(selectedItem)
+                                C -> if (isOnlyControlDown) copy(selectedItem)
+                            }
                         }
                     }
 
