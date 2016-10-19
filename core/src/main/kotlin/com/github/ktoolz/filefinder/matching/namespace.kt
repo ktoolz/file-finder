@@ -12,6 +12,7 @@
 package com.github.ktoolz.filefinder.matching
 
 import com.github.ktoolz.filefinder.model.MatchResult
+import com.github.ktoolz.filefinder.utils.choose
 import javaslang.collection.List
 import java.util.*
 
@@ -40,8 +41,14 @@ fun <T> List<T>.matchers(searchQuery: List<T>): List<MatchResult<T>> {
             }
 
     fun <T> List<T>.nGramsSearch(searchQuery: List<T>): List<MatchResult<T>> {
+        // For optimizing again performances, we could say that we only keep combinations with one error max.
+        // This leads to all combinations of n choose n and n choose n-1 where n is the size of the pattern we're searching for.
+        // This should limit a lot the combinations which are made for long patterns.
+        // There's a way in javaslang to generate only combinations of a certain size, but it doesn't allow to
+        // generate combinations for 2 different lenghts, and here we want n choose n and n-1 choose n.
+        val elementsToKeep = (searchQuery.size().choose(searchQuery.size() - 1) + 1).toLong()
         // Now using a Stream for matching the combinations, so we'll stop after the first result we find.
-        val ngramsMatchResults = searchQuery.combinations().reverse().toStream().map { ngram ->
+        val ngramsMatchResults = searchQuery.combinations().reverse().take(elementsToKeep).toStream().map { ngram ->
             matchExactly(ngram, List.empty())
         }.filter { it.nonEmpty() }
 
