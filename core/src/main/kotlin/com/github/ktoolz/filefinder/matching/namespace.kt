@@ -40,15 +40,12 @@ fun <T> List<T>.matchers(searchQuery: List<T>): List<MatchResult<T>> {
             }
 
     fun <T> List<T>.nGramsSearch(searchQuery: List<T>): List<MatchResult<T>> {
-        val ngramsMatchResults = searchQuery.combinations().map { ngram ->
+        // Now using a Stream for matching the combinations, so we'll stop after the first result we find.
+        val ngramsMatchResults = searchQuery.combinations().reverse().toStream().map { ngram ->
             matchExactly(ngram, List.empty())
         }.filter { it.nonEmpty() }
 
-        // TODO deal with multiple results with the same 'score'. For now, keep the first one
-        val bestMatchOption = ngramsMatchResults.sortBy { matchResultsOfNgram ->
-            // count the number of matches and inverse it to sort from biggest to smallest
-            -matchResultsOfNgram.filter(MatchResult<T>::match).size()
-        }.headOption().getOrElse(List.empty())
+        val bestMatchOption = ngramsMatchResults.headOption().getOrElse(List.empty())
 
         // As the N-Gram can contains less elements than the search query, replace missing elements
         // by a 'not found' match result
