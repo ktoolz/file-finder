@@ -14,7 +14,7 @@ package com.github.ktoolz.filefinder.utils
 fun <T> List<T>.toJavaslang() = javaslang.collection.List.ofAll(this)!!
 fun String.toJavaslangList() = toList().toJavaslang()
 
-fun time(block: () -> Any): Pair<Any, Long> {
+fun <T> time(block: () -> T): Pair<T, Long> {
     val now = System.currentTimeMillis()
     val result = block()
     val elapsed = System.currentTimeMillis() - now

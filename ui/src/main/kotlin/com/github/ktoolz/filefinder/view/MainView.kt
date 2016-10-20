@@ -17,8 +17,11 @@ import com.github.ktoolz.filefinder.model.FileSearchResult
 import com.github.ktoolz.filefinder.model.registeredBangs
 import com.github.ktoolz.filefinder.parser.ContextParser
 import com.github.ktoolz.filefinder.utils.ExecutionContext
+import com.github.ktoolz.filefinder.utils.time
 import com.sun.javafx.collections.ObservableListWrapper
+import javafx.beans.binding.Bindings
 import javafx.beans.property.SimpleStringProperty
+import javafx.geometry.Pos
 import javafx.scene.control.TableView
 import javafx.scene.control.TextField
 import javafx.scene.image.Image
@@ -39,6 +42,9 @@ class MainView : View() {
     val search = SimpleStringProperty()
     val result = ObservableListWrapper<FileSearchResult>(mutableListOf<FileSearchResult>())
 
+    var searchTime by property(0L)
+    fun searchTimeProperty() = getProperty(MainView::searchTime)
+
     val table: TableView<FileSearchResult> by lazy {
         @Suppress("UNCHECKED_CAST")
         (root.scene.lookup("#tableView") as TableView<FileSearchResult>)
@@ -58,8 +64,12 @@ class MainView : View() {
                 null -> result.clear()
                 else -> with(result) {
                     clear()
-                    addAll(files.search(ContextParser(registeredBangs()).parse(searchText)).take(
-                            MAX_ITEMS_TO_DISPLAY))
+                    val (searchResults, time) = time {
+                        files.search(ContextParser(registeredBangs()).parse(searchText)).take(
+                                MAX_ITEMS_TO_DISPLAY)
+                    }
+                    addAll(searchResults)
+                    searchTime = time
                 }
             }
         }
@@ -103,6 +113,12 @@ class MainView : View() {
                     onUserSelect {
                         open(it)
                     }
+                }
+            }
+
+            bottom {
+                label {
+                    textProperty().bind(Bindings.format("Results computed in %sms.", searchTimeProperty()))
                 }
             }
         }
