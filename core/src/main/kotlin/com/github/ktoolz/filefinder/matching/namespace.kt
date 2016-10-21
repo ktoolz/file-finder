@@ -18,7 +18,7 @@ import java.util.*
 /**
  * Computes a List of MatchResult elements out of a List, while searching for a Pattern.
  */
-fun <T> List<T>.matchers(searchQuery: List<T>): List<MatchResult<T>> {
+fun <T> List<T>.matchers(searchQuery: List<T>, combinations: List<List<T>>): List<MatchResult<T>> {
 
     tailrec fun <T> List<T>.matchExactly(searchPattern: List<T>,
                                          acc: List<MatchResult<T>>): List<MatchResult<T>> =
@@ -39,10 +39,10 @@ fun <T> List<T>.matchers(searchQuery: List<T>): List<MatchResult<T>> {
                 }
             }
 
-    fun <T> List<T>.nGramsSearch(searchQuery: List<T>): List<MatchResult<T>> {
+    fun List<T>.nGramsSearch(searchQuery: List<T>): List<MatchResult<T>> {
         // Optimization: we want to consider only a certain level of mistakes in the pattern to search for.
         // Basically, while computing the combinations, we want to take only the ones with 1 error max.
-        val ngramsMatchResults = searchQuery.combinations(searchQuery.size() -1).prepend(searchQuery).toStream().map { ngram ->
+        val ngramsMatchResults = combinations.toStream().map { ngram ->
             matchExactly(ngram, List.empty())
         }.filter { it.nonEmpty() }
 
@@ -78,5 +78,5 @@ fun <T> List<T>.matchers(searchQuery: List<T>): List<MatchResult<T>> {
 /**
  * Extension of a String to allow Pattern Matching from another String.
  */
-fun String.matchers(s: String): List<MatchResult<Char>> =
-        List.ofAll(toCharArray()).matchers(List.ofAll(s.toCharArray()))
+fun String.matchers(s: String, combinations: List<List<Char>>): List<MatchResult<Char>> =
+        List.ofAll(toCharArray()).matchers(List.ofAll(s.toCharArray()), combinations)

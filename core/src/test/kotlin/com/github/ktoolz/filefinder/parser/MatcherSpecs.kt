@@ -23,7 +23,8 @@ class MatcherSpecs : Spek() { init {
 
         on("matching list a,b,c") {
             val search = "abc".toJavaslangList()
-            val searchResult = inputList.matchers(search)
+            val combinations = search.combinations(search.size() - 1).prepend(search)
+            val searchResult = inputList.matchers(search, combinations)
 
             it("should contains no error") {
                 assertThat(searchResult.filter { !it.match }).hasSize(0)
@@ -32,7 +33,8 @@ class MatcherSpecs : Spek() { init {
 
         on("matching list e,b,c") {
             val search = "ebc".toJavaslangList()
-            val searchResult = inputList.matchers(search)
+            val combinations = search.combinations(search.size() - 1).prepend(search)
+            val searchResult = inputList.matchers(search, combinations)
 
             it("should contains one error") {
                 assertThat(searchResult.filter { !it.match }).hasSize(1)
@@ -41,7 +43,8 @@ class MatcherSpecs : Spek() { init {
 
         on("matching list a,a") {
             val search = "aa".toJavaslangList()
-            val searchResult = inputList.matchers(search)
+            val combinations = search.combinations(search.size() - 1).prepend(search)
+            val searchResult = inputList.matchers(search, combinations)
 
             it("should contains one error") {
                 assertThat(searchResult.filter { !it.match }).hasSize(1)
@@ -50,7 +53,8 @@ class MatcherSpecs : Spek() { init {
 
         on("matching list b,a") {
             val search = "ba".toJavaslangList()
-            val searchResult = inputList.matchers(search)
+            val combinations = search.combinations(search.size() - 1).prepend(search)
+            val searchResult = inputList.matchers(search, combinations)
 
             it("should contains one error") {
                 assertThat(searchResult.filter { !it.match }).hasSize(1)
@@ -59,7 +63,8 @@ class MatcherSpecs : Spek() { init {
 
         on("matching empty list") {
             val search = "".toJavaslangList()
-            val searchResult = inputList.matchers(search)
+            val combinations = search.combinations(search.size() - 1).prepend(search)
+            val searchResult = inputList.matchers(search, combinations)
 
             it("should contains no error") {
                 assertThat(searchResult.filter { !it.match }).hasSize(0)
