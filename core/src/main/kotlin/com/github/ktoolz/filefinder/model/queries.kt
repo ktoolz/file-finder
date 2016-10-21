@@ -12,13 +12,14 @@
 package com.github.ktoolz.filefinder.model
 
 import javaslang.collection.List
+import java.io.File
 
 data class BangQuery(val bang: Bang, val negated: Boolean = false)
 
 data class SearchQuery(val term: String, val bangs: List<BangQuery>, val directories: List<String>) {
-    fun filterDirectories(searchResult: FileSearchResult): Boolean =
-            directories.forAll { searchResult.file.parentFile.absolutePath?.contains("/$it") ?: false }
+    fun filterDirectories(file: File): Boolean =
+            directories.forAll { file.parentFile.absolutePath?.contains("/$it") ?: false }
 
-    fun filterBangs(searchResult: FileSearchResult): Boolean =
-            bangs.forAll { it.negated xor it.bang.filter(searchResult) }
+    fun filterBangs(file: File): Boolean =
+            bangs.forAll { it.negated xor it.bang.filter(file) }
 }

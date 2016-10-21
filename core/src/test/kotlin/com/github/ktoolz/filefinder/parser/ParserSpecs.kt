@@ -17,6 +17,7 @@ import com.github.ktoolz.filefinder.model.FileSearchResult
 import javaslang.collection.List
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.spek.api.Spek
+import java.io.File
 
 class ParserSpecs : Spek() { init {
 
@@ -152,10 +153,10 @@ class ParserSpecs : Spek() { init {
 
 class FooBang : Bang {
     override val name = "foo"
-    override fun filter(result: FileSearchResult) = true
+    override fun filter(result: File) = true
 }
 
 class GooBang: Bang {
     override val name = "goo"
-    override fun filter(result: FileSearchResult) = true
+    override fun filter(result: File) = true
 }
