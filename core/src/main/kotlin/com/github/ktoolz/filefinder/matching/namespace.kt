@@ -42,7 +42,7 @@ fun <T> List<T>.matchers(searchQuery: List<T>): List<MatchResult<T>> {
     fun <T> List<T>.nGramsSearch(searchQuery: List<T>): List<MatchResult<T>> {
         // Optimization: we want to consider only a certain level of mistakes in the pattern to search for.
         // Basically, while computing the combinations, we want to take only the ones with 1 error max.
-        val ngramsMatchResults = searchQuery.combinations(searchQuery.size() -1).append(searchQuery).toStream().map { ngram ->
+        val ngramsMatchResults = searchQuery.combinations(searchQuery.size() -1).prepend(searchQuery).toStream().map { ngram ->
             matchExactly(ngram, List.empty())
         }.filter { it.nonEmpty() }
 
