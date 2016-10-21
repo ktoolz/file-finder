@@ -17,6 +17,11 @@ import java.io.File
 data class BangQuery(val bang: Bang, val negated: Boolean = false)
 
 data class SearchQuery(val term: String, val bangs: List<BangQuery>, val directories: List<String>) {
+    val combinations: List<List<Char>>
+    init {
+        val list = List.ofAll(term.toLowerCase().toCharArray())
+        combinations = list.combinations(list.size() - 1).prepend(list)
+    }
     fun filterDirectories(file: File): Boolean =
             directories.forAll { file.parentFile.absolutePath?.contains("/$it") ?: false }
 

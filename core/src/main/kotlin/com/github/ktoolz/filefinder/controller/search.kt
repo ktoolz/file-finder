@@ -24,10 +24,10 @@ import java.io.File
  * Allows to filterDirectories the files through Pattern Matching, also applying filters on directories, and bangs! like
  * in DuckDuckGo for additional options.
  */
-fun Iterable<File>.search(searchQuery: SearchQuery, combinations: List<List<Char>>) =
+fun Iterable<File>.search(searchQuery: SearchQuery) =
         filter { searchQuery.filterDirectories(it) }.filter { searchQuery.filterBangs(it) }
                 .map { file ->
                     val lowerCaseName = file.name.toLowerCase()
-                    FileSearchResult(lowerCaseName.matchers(searchQuery.term.toLowerCase(), combinations), file)
+                    FileSearchResult(lowerCaseName.matchers(searchQuery.term.toLowerCase(), searchQuery.combinations), file)
                 }.sortedBy { Tuple3(-it.score, it.filename.length, it.filename) }
 
