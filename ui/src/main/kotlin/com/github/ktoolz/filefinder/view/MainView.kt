@@ -21,7 +21,6 @@ import com.github.ktoolz.filefinder.utils.time
 import com.sun.javafx.collections.ObservableListWrapper
 import javafx.beans.binding.Bindings
 import javafx.beans.property.SimpleStringProperty
-import javafx.geometry.Pos
 import javafx.scene.control.TableView
 import javafx.scene.control.TextField
 import javafx.scene.image.Image
@@ -44,6 +43,9 @@ class MainView : View() {
 
     var searchTime by property(0L)
     fun searchTimeProperty() = getProperty(MainView::searchTime)
+
+    var filesSize by property(0)
+    fun filesSizeProperty() = getProperty(MainView::filesSize)
 
     val table: TableView<FileSearchResult> by lazy {
         @Suppress("UNCHECKED_CAST")
@@ -118,12 +120,17 @@ class MainView : View() {
 
             bottom {
                 label {
-                    textProperty().bind(Bindings.format("Results computed in %sms.", searchTimeProperty()))
+                    textProperty().bind(Bindings.format("Searched %s files in %sms.",
+                                                        filesSizeProperty(),
+                                                        searchTimeProperty()))
                 }
             }
         }
 
-        runAsync { files = loadAll(*ExecutionContext.directories.toTypedArray()) } ui { inputSearch.isDisable = false }
+        runAsync { files = loadAll(*ExecutionContext.directories.toTypedArray()) } ui {
+            inputSearch.isDisable = false
+            filesSize = files.size
+        }
     }
 
     /**

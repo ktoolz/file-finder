@@ -32,14 +32,3 @@ inline fun <T> T.use(block: (T) -> Unit): T = apply { block(this) }
 inline fun <reified T> Any.castUse(block: T.() -> Unit) {
     if (this is T) block(this)
 }
-
-/**
- * Recursive implementation of binomial coefficient
- */
-fun Int.choose(i: Int): Int =
-        if (this < i)
-            0
-        else if(i == 0 || i == this)
-            1
-        else
-            (this-1).choose(i-1) + (this-1).choose(i)
