@@ -68,7 +68,7 @@ class MainView : View() {
                     clear()
                     val (searchResults, time) = time {
 
-                        val list = javaslang.collection.List.ofAll(searchText.toCharArray())
+                        val list = javaslang.collection.List.ofAll(searchText.toLowerCase().toCharArray())
                         val combinations = list.combinations(list.size() - 1).prepend(list)
                         files.search(ContextParser(registeredBangs()).parse(searchText), combinations).take(
                                 MAX_ITEMS_TO_DISPLAY)
