@@ -19,6 +19,8 @@ import com.github.ktoolz.filefinder.parser.ContextParser
 import com.github.ktoolz.filefinder.utils.ExecutionContext
 import com.github.ktoolz.filefinder.utils.time
 import com.sun.javafx.collections.ObservableListWrapper
+import javafx.application.Platform
+import javafx.application.Platform.runLater
 import javafx.beans.binding.Bindings
 import javafx.beans.property.SimpleStringProperty
 import javafx.scene.control.TableView
@@ -27,9 +29,11 @@ import javafx.scene.image.Image
 import javafx.scene.input.Clipboard
 import javafx.scene.input.KeyCode.*
 import javafx.scene.layout.BorderPane
+import rx.Observable
 import tornadofx.*
 import java.awt.Desktop
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 class MainView : View() {
 
@@ -47,6 +51,8 @@ class MainView : View() {
     var filesSize by property(0)
     fun filesSizeProperty() = getProperty(MainView::filesSize)
 
+    val observable: Observable<String>
+
     val table: TableView<FileSearchResult> by lazy {
         @Suppress("UNCHECKED_CAST")
         (root.scene.lookup("#tableView") as TableView<FileSearchResult>)
@@ -61,13 +67,22 @@ class MainView : View() {
         title = messages["title"]
         addStageIcon(Image(MainView::class.java.getResourceAsStream("/icon.png")))
 
-        search.onChange { searchText ->
-            when (searchText) {
-                null -> result.clear()
-                else -> with(result) {
+        observable = Observable.create<String> {
+            search.onChange { searchText ->
+                when (searchText) {
+                    null -> result.clear()
+                    else -> it.onNext(searchText)
+                }
+            }
+        }
+
+        observable.debounce(ExecutionContext.debounce, TimeUnit.MILLISECONDS).subscribe {
+            runLater {
+                with(result) {
+                    println(it)
                     clear()
                     val (searchResults, time) = time {
-                        val searchQuery = ContextParser(registeredBangs()).parse(searchText)
+                        val searchQuery = ContextParser(registeredBangs()).parse(it)
                         files.search(searchQuery).take(MAX_ITEMS_TO_DISPLAY)
                     }
                     addAll(searchResults)
