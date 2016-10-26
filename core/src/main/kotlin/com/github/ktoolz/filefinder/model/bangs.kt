@@ -13,12 +13,13 @@ package com.github.ktoolz.filefinder.model
 
 import com.github.ktoolz.filefinder.utils.ExecutionContext
 import javaslang.collection.List
+import java.io.File
 
 fun registeredBangs() = List.of(TargetBang(), SourceBang(), IgnoredBang())
 
 interface Bang {
     val name: String
-    fun filter(result: SearchResult): Boolean
+    fun filter(result: File): Boolean
 }
 
 class SourceBang : Bang {
@@ -26,9 +27,9 @@ class SourceBang : Bang {
 
     override val name = "src"
 
-    override fun filter(result: SearchResult) =
+    override fun filter(result: File) =
             sourceExtensions.foldRight(false) { extension, keep ->
-                keep || result.filename.endsWith(".$extension")
+                keep || result.name.endsWith(".$extension")
             }
 
 }
@@ -36,14 +37,14 @@ class SourceBang : Bang {
 class TargetBang : Bang {
     override val name = "target"
 
-    override fun filter(result: SearchResult) = result.file.canonicalPath.contains("/target/")
+    override fun filter(result: File) = result.canonicalPath.contains("/target/")
 }
 
 class IgnoredBang : Bang {
     override val name = "ignored"
 
-    override fun filter(result: SearchResult) = ExecutionContext.ignored.fold(false) {
+    override fun filter(result: File) = ExecutionContext.ignored.fold(false) {
         keep, extension ->
-        keep || result.filename.endsWith(".$extension")
+        keep || result.name.endsWith(".$extension")
     }
 }

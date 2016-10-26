@@ -11,6 +11,7 @@
  */
 package com.github.ktoolz.filefinder.controller
 
+import com.github.ktoolz.filefinder.utils.ExecutionContext
 import java.io.File
 
 /**
@@ -28,6 +29,6 @@ fun loadAll(vararg root: File): List<File> =
 fun load(root: File): List<File> =
         when {
             root.isFile -> listOf(root)
-            root.isDirectory -> listOf(*root.listFiles()).flatMap { load(it) }
+            root.isDirectory && (ExecutionContext.dotdirectories || !root.absolutePath.contains("/.")) -> listOf(*root.listFiles()).flatMap(::load)
             else -> listOf()
         }

@@ -18,7 +18,7 @@ import java.util.*
 /**
  * Store a search result
  */
-data class SearchResult(val matchers: List<PatternMatcher<Char>>, val file: File) {
+data class FileSearchResult(val matchers: List<MatchResult<Char>>, val file: File) {
     val filename: String by lazy { file.name }
     val score: Int = matchers.foldLeft(0) {
         score, pattern ->
@@ -36,4 +36,4 @@ data class SearchResult(val matchers: List<PatternMatcher<Char>>, val file: File
     }
 }
 
-data class PatternMatcher<out T>(val element: T, val match: Boolean, val distance: Optional<Int>)
+data class MatchResult<out T>(val element: T, val match: Boolean, val distance: Optional<Int>)

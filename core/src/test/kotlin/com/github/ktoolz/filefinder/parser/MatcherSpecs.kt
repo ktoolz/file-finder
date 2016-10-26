@@ -13,7 +13,6 @@ package com.github.ktoolz.filefinder.parser
 
 import com.github.ktoolz.filefinder.matching.matchers
 import com.github.ktoolz.filefinder.utils.toJavaslangList
-import javaslang.collection.List
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.spek.api.Spek
 
@@ -21,17 +20,56 @@ class MatcherSpecs : Spek() { init {
 
     given("the list a,x,b,x,c,x,d,x,e") {
         val inputList = "abcde".toJavaslangList().intersperse('x')
-        println(inputList)
 
         on("matching list a,b,c") {
             val search = "abc".toJavaslangList()
-            val searchResult = inputList.matchers(search, List.empty())
+            val combinations = search.combinations(search.size() - 1).prepend(search)
+            val searchResult = inputList.matchers(search, combinations)
 
             it("should contains no error") {
                 assertThat(searchResult.filter { !it.match }).hasSize(0)
             }
         }
 
+        on("matching list e,b,c") {
+            val search = "ebc".toJavaslangList()
+            val combinations = search.combinations(search.size() - 1).prepend(search)
+            val searchResult = inputList.matchers(search, combinations)
+
+            it("should contains one error") {
+                assertThat(searchResult.filter { !it.match }).hasSize(1)
+            }
+        }
+
+        on("matching list a,a") {
+            val search = "aa".toJavaslangList()
+            val combinations = search.combinations(search.size() - 1).prepend(search)
+            val searchResult = inputList.matchers(search, combinations)
+
+            it("should contains one error") {
+                assertThat(searchResult.filter { !it.match }).hasSize(1)
+            }
+        }
+
+        on("matching list b,a") {
+            val search = "ba".toJavaslangList()
+            val combinations = search.combinations(search.size() - 1).prepend(search)
+            val searchResult = inputList.matchers(search, combinations)
+
+            it("should contains one error") {
+                assertThat(searchResult.filter { !it.match }).hasSize(1)
+            }
+        }
+
+        on("matching empty list") {
+            val search = "".toJavaslangList()
+            val combinations = search.combinations(search.size() - 1).prepend(search)
+            val searchResult = inputList.matchers(search, combinations)
+
+            it("should contains no error") {
+                assertThat(searchResult.filter { !it.match }).hasSize(0)
+            }
+        }
     }
 
 }
