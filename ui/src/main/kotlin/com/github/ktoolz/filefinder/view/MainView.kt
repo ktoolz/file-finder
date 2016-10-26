@@ -19,7 +19,6 @@ import com.github.ktoolz.filefinder.parser.ContextParser
 import com.github.ktoolz.filefinder.utils.ExecutionContext
 import com.github.ktoolz.filefinder.utils.time
 import com.sun.javafx.collections.ObservableListWrapper
-import javafx.application.Platform
 import javafx.application.Platform.runLater
 import javafx.beans.binding.Bindings
 import javafx.beans.property.SimpleStringProperty
@@ -33,7 +32,6 @@ import javafx.scene.layout.BorderPane
 import rx.Observable
 import tornadofx.*
 import java.awt.Desktop
-import java.awt.Event
 import java.io.File
 import java.util.concurrent.TimeUnit
 

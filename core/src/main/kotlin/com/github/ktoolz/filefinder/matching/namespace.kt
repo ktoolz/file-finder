@@ -16,10 +16,25 @@ import javaslang.collection.List
 import java.util.*
 
 /**
- * Computes a List of MatchResult elements out of a List, while searching for a Pattern.
+ * Computes a List of [MatchResult] elements out of a List, while searching for a Pattern.
+ *
+ * @param pattern a List of elements composing the pattern to search for
+ * @param combinations a List of the combinations of [pattern] we want to use for the research (because we want to tolerate some mistakes)
+ * @receiver a List of elements on which we actually want to search for matching elements
+ *
+ * @return a List of [MatchResult] which contains elements matching with our pattern research. They'll be used afterwards to compute the search results.
  */
-fun <T> List<T>.matchers(searchQuery: List<T>, combinations: List<List<T>>): List<MatchResult<T>> {
+fun <T> List<T>.matchers(pattern: List<T>, combinations: List<List<T>>): List<MatchResult<T>> {
 
+    /**
+     * Computes a List of [MatchResult] elements out of a List, keeping only the elements matching exactly the pattern which we're searching for.
+     *
+     * @param searchPattern the actual pattern we're searching for (exactly) in the provided List
+     * @param acc because it's recursive, an accumulator of the results we compute during the execution
+     * @receiver a List of elements on which we actually perform the research
+     *
+     * @return a List of [MatchResult] which contains the elements exactly matching with the pattern we provide
+     */
     tailrec fun <T> List<T>.matchExactly(searchPattern: List<T>,
                                          acc: List<MatchResult<T>>): List<MatchResult<T>> =
             when {
@@ -39,44 +54,79 @@ fun <T> List<T>.matchers(searchQuery: List<T>, combinations: List<List<T>>): Lis
                 }
             }
 
-    fun List<T>.nGramsSearch(searchQuery: List<T>): List<MatchResult<T>> {
-        // Optimization: we want to consider only a certain level of mistakes in the pattern to search for.
-        // Basically, while computing the combinations, we want to take only the ones with 1 error max.
-        val ngramsMatchResults = combinations.toStream().map { ngram ->
-            matchExactly(ngram, List.empty())
-        }.filter { it.nonEmpty() }
+    /**
+     * Computes a List of [MatchResult] elements out of a List, keeping the elements matching with the pattern we're searching for, with some fault tolerance.
+     * We're using combinations of the search pattern allowing the research to also accept up to 1 mistake or missing characters.
+     *
+     * @param searchPattern the pattern we're searching for in the provided List - this function will actually also use the combinations of that pattern.
+     * @receiver a List of elements on which we actually perform the research
+     *
+     * @return a List of [MatchResult] which contains the elements matching with the pattern we provide, with tolerance on mistakes :)
+     */
+    fun List<T>.nGramsSearch(searchPattern: List<T>): List<MatchResult<T>> {
 
+        /**
+         * List of search results for all the combinations
+         */
+        val ngramsMatchResults = combinations.toStream()
+                .map { matchExactly(it, List.empty()) }
+                .filter { it.nonEmpty() }
+
+        /**
+         * The best option we can find while searching for the pattern
+         */
         val bestMatchOption = ngramsMatchResults.headOption().getOrElse(List.empty())
 
-        // As the N-Gram can contains less elements than the search query, replace missing elements
-        // by a 'not found' match result
+        /**
+         * Creates a [MatchResult] object for a not found element
+         * @receiver a part of the search pattern which isn't found while searching the list of files
+         *
+         * @return a [MatchResult] element stating that this part of the pattern isn't found
+         */
         fun T.notFound() = MatchResult(this, false, Optional.empty())
 
-        fun addMissings(searchQuery: List<T>,
+        /**
+         * Computes the actual List of [MatchResult] by completing the found ones.
+         * As the N-Gram can contains less elements than the search query, replace missing elements
+         * by a 'not found' match result.
+         *
+         * @param searchPattern the pattern we're searching for in the provided List
+         * @param matchResults the results we found during the search process - those results may be incomplete cause
+         * they might contain less elements than the search query, as mentionned in the comment
+         * @param acc an accumulator for the recursive calls, containing the complete List we're actually building
+         *
+         * @return a List containing all the [MatchResult], matching with the actual length of the search pattern we provided
+         */
+        fun addMissings(searchPattern: List<T>,
                         matchResults: List<MatchResult<T>>,
                         acc: List<MatchResult<T>>): List<MatchResult<T>> =
                 when {
-                    searchQuery.isEmpty -> acc
-                    matchResults.isEmpty -> addMissings(searchQuery.tail(),
+                    searchPattern.isEmpty -> acc
+                    matchResults.isEmpty -> addMissings(searchPattern.tail(),
                                                         matchResults,
-                                                        acc.append(searchQuery.head().notFound()))
-                    matchResults.head().element == searchQuery.head() -> addMissings(searchQuery.tail(),
-                                                                                     matchResults.tail(),
-                                                                                     acc.append(matchResults.head()))
-                    else -> addMissings(searchQuery.tail(),
+                                                        acc.append(searchPattern.head().notFound()))
+                    matchResults.head().element == searchPattern.head() -> addMissings(searchPattern.tail(),
+                                                                                       matchResults.tail(),
+                                                                                       acc.append(matchResults.head()))
+                    else -> addMissings(searchPattern.tail(),
                                         matchResults,
-                                        acc.append(searchQuery.head().notFound()))
+                                        acc.append(searchPattern.head().notFound()))
                 }
 
-        return addMissings(searchQuery, bestMatchOption, List.empty())
-
+        // Hey! Look, this is actually what's returned by [nGramsSearch] in case you didn't notice ;p
+        return addMissings(searchPattern, bestMatchOption, List.empty())
     }
-
-    return nGramsSearch(searchQuery)
+    return nGramsSearch(pattern)
 }
 
 /**
- * Extension of a String to allow Pattern Matching from another String.
+ * Returns the matchers of a String from another one, and its combinations.
+ *
+ * @param pattern the pattern we're searching for in the receiver String
+ * @param combinations combinations of the pattern we will search for as well (used for fault tolerance)
+ * @receiver the String on which we want to compute the matching
+ *
+ * @return a List of [MatchResult] elements containing all the matchers elements for that research
  */
-fun String.matchers(s: String, combinations: List<List<Char>>): List<MatchResult<Char>> =
-        List.ofAll(toCharArray()).matchers(List.ofAll(s.toCharArray()), combinations)
+fun String.matchers(pattern: String, combinations: List<List<Char>>): List<MatchResult<Char>> =
+        List.ofAll(toCharArray()).matchers(List.ofAll(pattern.toCharArray()), combinations)

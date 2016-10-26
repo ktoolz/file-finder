@@ -15,7 +15,10 @@ import com.github.ktoolz.filefinder.utils.ExecutionContext
 import java.io.File
 
 /**
- * Loads a lit of Files from a results of several directories
+ * Loads a list of all files contained in all the directories given as parameters.
+ *
+ * @param root a list of directories from which the list of files should be extracted
+ * @return a list of all Files contained in the provided directories
  */
 fun loadAll(vararg root: File): List<File> =
         when {
@@ -24,11 +27,19 @@ fun loadAll(vararg root: File): List<File> =
         }
 
 /**
- * Loads a results of Files from a particular directory
+ * Loads a list of all files contained in a specific directory.
+ * This list of files may not contain files coming from _dot_ directories if the configuration defined in *ExecutionContext* says so.
+ *
+ * @param root a directory from which the list of files should be extracted
+ * @return a list of all Files contained in the provided directory
  */
 fun load(root: File): List<File> =
         when {
             root.isFile -> listOf(root)
-            root.isDirectory && (ExecutionContext.dotdirectories || !root.absolutePath.contains("/.")) -> listOf(*root.listFiles()).flatMap(::load)
+        // This line allows to load all the files from a directory if that directory isn't ignored.
+        // Directory will be ignored if the configuration is set to ignore _dot_ directories, and the directory is actually a _dot_ one.
+        // Reminder: _dot_ directories are the hidden ones in Linux, where the name of the directory actually starts with a `.`
+            root.isDirectory && (ExecutionContext.dotdirectories || !root.absolutePath.contains("/.")) -> listOf(*root.listFiles()).flatMap(
+                    ::load)
             else -> listOf()
         }
