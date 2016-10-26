@@ -16,8 +16,8 @@ import com.github.ktoolz.filefinder.model.BangQuery
 import com.github.ktoolz.filefinder.model.SearchQuery
 import javaslang.collection.List
 
-fun List<Bang>.names() = this.map { it.name }
-fun List<Bang>.findBang(name: String) = this.find { it.name.equals(name) }.get()
+fun List<Bang>.names() = this.map { it.name }!!
+fun List<Bang>.findBang(name: String) = this.find { it.name == name }.get()!!
 
 class ContextParser(val bangsReferences: List<Bang>,
                     val bangsIdentifier: Char = '!',
