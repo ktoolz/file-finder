@@ -98,6 +98,8 @@ __Available elements at the moment:__
 
 - `directories`: the list (comma separated) of all directories to be parsed while searching for files,
 - `ignored`: the list (comma separated) of all extensions to be ignored while using the `!ignored` _Bang!_.
+- `dotdirectories`: boolean specifying if the program should consider dot directories or not (hidden directories). It'll be _false_ by default. Turning it to _true_ will consider way more files but might cause performances issues.
+- `debounce`: integer property representing the time to wait, in milliseconds, before actually computing the research after stopping to type characters. It'll be 150 by default (increase it if you're not typing really fast on a keyboard ;)).
 
 Additional configuration (which are not listed here) won't be taken into account.
 

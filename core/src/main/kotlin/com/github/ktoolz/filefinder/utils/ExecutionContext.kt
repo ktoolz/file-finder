@@ -20,14 +20,18 @@ object ExecutionContext {
     val properties: Properties
     val directories: MutableSet<File>
     val ignored: Set<String>
+    val dotdirectories: Boolean
+    val debounce: Long
 
     init {
         properties = loadDotFile()
         directories = properties.getProperty("directories", "").splitParts().toFiles().toMutableSet()
         ignored = properties.getProperty("ignored","").splitParts().toSet()
+        dotdirectories = properties.getProperty("dotdirectories","false").toBoolean()
+        debounce = properties.getProperty("debounce","150").toLong()
     }
 
-    fun String.splitParts() = this.split(",").toList().map { it.trim() }
+    fun String.splitParts() = this.split(",").toList().map(String::trim)
 }
 
 fun loadDotFile(): Properties {

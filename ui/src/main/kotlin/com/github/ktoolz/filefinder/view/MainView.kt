@@ -13,12 +13,14 @@ package com.github.ktoolz.filefinder.view
 
 import com.github.ktoolz.filefinder.controller.loadAll
 import com.github.ktoolz.filefinder.controller.search
-import com.github.ktoolz.filefinder.model.SearchResult
+import com.github.ktoolz.filefinder.model.FileSearchResult
 import com.github.ktoolz.filefinder.model.registeredBangs
 import com.github.ktoolz.filefinder.parser.ContextParser
 import com.github.ktoolz.filefinder.utils.ExecutionContext
 import com.github.ktoolz.filefinder.utils.time
 import com.sun.javafx.collections.ObservableListWrapper
+import javafx.application.Platform
+import javafx.application.Platform.runLater
 import javafx.beans.binding.Bindings
 import javafx.beans.property.SimpleStringProperty
 import javafx.scene.control.TableView
@@ -28,10 +30,12 @@ import javafx.scene.input.Clipboard
 import javafx.scene.input.KeyCode.*
 import javafx.scene.input.KeyEvent
 import javafx.scene.layout.BorderPane
+import rx.Observable
 import tornadofx.*
 import java.awt.Desktop
 import java.awt.Event
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 class MainView : View() {
 
@@ -47,14 +51,19 @@ class MainView : View() {
 
     lateinit var files: List<File>
     val search = SimpleStringProperty()
-    val result = ObservableListWrapper<SearchResult>(mutableListOf<SearchResult>())
+    val result = ObservableListWrapper<FileSearchResult>(mutableListOf<FileSearchResult>())
 
     var searchTime by property(0L)
     fun searchTimeProperty() = getProperty(MainView::searchTime)
 
-    val table: TableView<SearchResult> by lazy {
+    var filesSize by property(0)
+    fun filesSizeProperty() = getProperty(MainView::filesSize)
+
+    val observable: Observable<String>
+
+    val table: TableView<FileSearchResult> by lazy {
         @Suppress("UNCHECKED_CAST")
-        (root.scene.lookup("#tableView") as TableView<SearchResult>)
+        (root.scene.lookup("#tableView") as TableView<FileSearchResult>)
     }
 
     val inputSearch: TextField by lazy {
@@ -66,14 +75,23 @@ class MainView : View() {
         title = messages["title"]
         addStageIcon(Image(MainView::class.java.getResourceAsStream("/icon.png")))
 
-        search.onChange { searchText ->
-            when (searchText) {
-                null -> result.clear()
-                else -> with(result) {
+        observable = Observable.create<String> {
+            search.onChange { searchText ->
+                when (searchText) {
+                    null -> result.clear()
+                    else -> it.onNext(searchText)
+                }
+            }
+        }
+
+        observable.debounce(ExecutionContext.debounce, TimeUnit.MILLISECONDS).subscribe {
+            runLater {
+                with(result) {
+                    println(it)
                     clear()
                     val (searchResults, time) = time {
-                        files.search(ContextParser(registeredBangs()).parse(searchText)).take(
-                                MAX_ITEMS_TO_DISPLAY)
+                        val searchQuery = ContextParser(registeredBangs()).parse(it)
+                        files.search(searchQuery).take(MAX_ITEMS_TO_DISPLAY)
                     }
                     addAll(searchResults)
                     searchTime = time
@@ -103,9 +121,9 @@ class MainView : View() {
             center {
                 tableview(result) {
                     id = "tableView"
-                    column("Score", SearchResult::score).prefWidth = 50.0
-                    column("File", SearchResult::filename).prefWidth = 250.0
-                    column("Path", SearchResult::file).prefWidth = 600.0
+                    column("Score", FileSearchResult::score).prefWidth = 50.0
+                    column("File", FileSearchResult::filename).prefWidth = 250.0
+                    column("Path", FileSearchResult::file).prefWidth = 600.0
 
                     setOnKeyPressed { event ->
                         with(event) {
@@ -127,18 +145,23 @@ class MainView : View() {
 
             bottom {
                 label {
-                    textProperty().bind(Bindings.format("Results computed in %sms.", searchTimeProperty()))
+                    textProperty().bind(Bindings.format("Searched %s files in %sms.",
+                                                        filesSizeProperty(),
+                                                        searchTimeProperty()))
                 }
             }
         }
 
-        runAsync { files = loadAll(*ExecutionContext.directories.toTypedArray()) } ui { inputSearch.isDisable = false }
+        runAsync { files = loadAll(*ExecutionContext.directories.toTypedArray()) } ui {
+            inputSearch.isDisable = false
+            filesSize = files.size
+        }
     }
 
     /**
      * Open the parent folder of a file in the default application
      */
-    private fun browse(result: SearchResult?) {
+    private fun browse(result: FileSearchResult?) {
         if (result != null) {
             runAsync { Desktop.getDesktop().open(result.file.parentFile) }
         }
@@ -147,7 +170,7 @@ class MainView : View() {
     /**
      * Open the selected file in the default application
      */
-    private fun open(result: SearchResult?) {
+    private fun open(result: FileSearchResult?) {
         if (result != null) {
             runAsync { Desktop.getDesktop().open(result.file) }
         }
@@ -156,7 +179,7 @@ class MainView : View() {
     /**
      * Copy in the clipboard the path of selected file
      */
-    private fun copy(result: SearchResult?) {
+    private fun copy(result: FileSearchResult?) {
         if (result != null) {
             Clipboard.getSystemClipboard().putString(result.file.canonicalPath)
         }
