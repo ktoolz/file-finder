@@ -16,10 +16,24 @@ import java.io.File
 import java.util.*
 
 /**
- * Store a search result
+ * Stores the actual result of a File search from all matchers computed previsouly.
+ * It'll also compute a score allowing to order the results from best to worst.
+ *
+ * @property matchers a List of all [MatchResult] elements computed while searching through the files
+ *                      (so basically just the results of the search process)
+ * @property file the actual file which has been found
  */
 data class FileSearchResult(val matchers: List<MatchResult<Char>>, val file: File) {
+    /**
+     * Name of the file linked to that search result
+     */
     val filename: String by lazy { file.name }
+
+    /**
+     * A computed score allowing to order the results.
+     * Basically, it'll be better when letters from the pattern are found and close together,
+     * and it'll get worse when letters aren't found or when they're far from each other.
+     */
     val score: Int = matchers.foldLeft(0) {
         score, pattern ->
         when {
@@ -36,4 +50,15 @@ data class FileSearchResult(val matchers: List<MatchResult<Char>>, val file: Fil
     }
 }
 
+/**
+ * Wrapper for the results of matching process.
+ * It'll basically just contain one element of the pattern, and an indication stating if it has been found or not,
+ * and at which distance from the previous one.
+ * It'll basically allow afterwards to calculate if a result is good or not.
+ *
+ * @property element the part of the pattern which we were searching for
+ * @property match a boolean stating if that part of the pattern has been found or not
+ * @property distance an [Optional] integer matching with the distance between the current element we were searching for and
+ *                      the previous one
+ */
 data class MatchResult<out T>(val element: T, val match: Boolean, val distance: Optional<Int>)

@@ -14,26 +14,62 @@ package com.github.ktoolz.filefinder.utils
 import java.io.File
 import java.util.*
 
-fun List<String>.toFiles() = this.map { File(it) }
+/**
+ * Transforms a List of String into a List of Files by creating Files from each String :)
+ * @receiver a List of String, ideally containing paths cause we'll create files out of it
+ *
+ * @return a List of Files created from each String
+ */
+fun List<String>.toFiles() = this.map(::File)
 
+/**
+ * Singleton holding the application configuration.
+ * Nothing fancy here, it's just reading the configuration file and loading its data :)
+ */
 object ExecutionContext {
+    /**
+     * Properties matching with the content of the configuration file
+     */
     val properties: Properties
+    /**
+     * A Set containing all the directories in which we want to perform the search
+     */
     val directories: MutableSet<File>
+    /**
+     * A Set containing all the extensions to be ignored while using the associate Bang
+     */
     val ignored: Set<String>
+    /**
+     * A boolean allowing to state if dotdirectories should be considered while searching files or not
+     */
     val dotdirectories: Boolean
+    /**
+     * The debounce value to be used while processing the search in milliseconds
+     */
     val debounce: Long
 
+    /**
+     * The maximum number of items to be displayed in the search results
+     */
+    val items: Int
+
     init {
+        fun String.splitParts() = this.split(",").toList().map(String::trim)
         properties = loadDotFile()
         directories = properties.getProperty("directories", "").splitParts().toFiles().toMutableSet()
-        ignored = properties.getProperty("ignored","").splitParts().toSet()
-        dotdirectories = properties.getProperty("dotdirectories","false").toBoolean()
-        debounce = properties.getProperty("debounce","150").toLong()
+        ignored = properties.getProperty("ignored", "").splitParts().toSet()
+        dotdirectories = properties.getProperty("dotdirectories", "false").toBoolean()
+        debounce = properties.getProperty("debounce", "150").toLong()
+        items = properties.getProperty("items", "15").toInt()
     }
 
-    fun String.splitParts() = this.split(",").toList().map(String::trim)
 }
 
+/**
+ * Loads the default configuration file of the application, and returns a Properties object out of it.
+ *
+ * @return a Properties object containing all the values contained in the application default configuration file
+ */
 fun loadDotFile(): Properties {
     val properties = Properties()
     val homedir = System.getProperty("user.home")

@@ -11,24 +11,31 @@
  */
 package com.github.ktoolz.filefinder.utils
 
+/**
+ * Creates a Javaslang list out of a Kotlin List
+ * @receiver a Kotlin List
+ *
+ * @return a Javaslang List containing all the elements of the Kotlin List
+ */
 fun <T> List<T>.toJavaslang() = javaslang.collection.List.ofAll(this)!!
+
+/**
+ * Creates a Javaslang list containing all the characters of a String
+ * @receiver a String that we want to decompose
+ *
+ * @return a Javaslang containing all the characters of the provided String
+ */
 fun String.toJavaslangList() = toList().toJavaslang()
 
+/**
+ * Executes a particular block and returns the result as well as the time it required to compute
+ * @param block the block to be executed, basically just a function producing something
+ *
+ * @return a [Pair] element containing both the result of the block execution, and the time ellapsed to do that
+ */
 fun <T> time(block: () -> T): Pair<T, Long> {
     val now = System.currentTimeMillis()
     val result = block()
     val elapsed = System.currentTimeMillis() - now
     return result to elapsed
-}
-
-fun banner(block: () -> Any) {
-    println("---------------------------------------")
-    println(block())
-    println("---------------------------------------")
-}
-
-inline fun <T> T.use(block: (T) -> Unit): T = apply { block(this) }
-
-inline fun <reified T> Any.castUse(block: T.() -> Unit) {
-    if (this is T) block(this)
 }

@@ -16,9 +16,30 @@ import com.github.ktoolz.filefinder.model.BangQuery
 import com.github.ktoolz.filefinder.model.SearchQuery
 import javaslang.collection.List
 
+/**
+ * Retrieves a List of all the names of a Bangs List
+ * @receiver a List of [Bang]
+ *
+ * @return a List of all the [Bang] names
+ */
 fun List<Bang>.names() = this.map { it.name }!!
+
+/**
+ * Retrieves a [Bang] in a List from its name
+ * @param name the name of a [Bang] we'd like to retrieve
+ * @receiver a List of [Bang]
+ *
+ * @return a [Bang] matching with the provided name
+ */
 fun List<Bang>.findBang(name: String) = this.find { it.name == name }.get()!!
 
+/**
+ * Allows to parse a String provided by the user in order to create a [SearchQuery] out of it.
+ *
+ * @property bangsReferences a list of all the [Bang] registered in the application
+ * @property bangsIdentifier the character to be used for identifying the Bangs! in the String
+ * @property directorySpecialChar the character to be used for identifying the directories to be filtered
+ */
 class ContextParser(val bangsReferences: List<Bang>,
                     val bangsIdentifier: Char = '!',
                     val directorySpecialChar: Char = '/') {

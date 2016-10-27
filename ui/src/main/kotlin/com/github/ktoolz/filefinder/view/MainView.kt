@@ -9,6 +9,8 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+@file:Suppress("NON_EXHAUSTIVE_WHEN")
+
 package com.github.ktoolz.filefinder.view
 
 import com.github.ktoolz.filefinder.controller.loadAll
@@ -21,13 +23,13 @@ import com.github.ktoolz.filefinder.utils.time
 import com.sun.javafx.collections.ObservableListWrapper
 import javafx.application.Platform.runLater
 import javafx.beans.binding.Bindings
+import javafx.beans.property.SimpleLongProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.scene.control.TableView
 import javafx.scene.control.TextField
 import javafx.scene.image.Image
 import javafx.scene.input.Clipboard
 import javafx.scene.input.KeyCode.*
-import javafx.scene.input.KeyEvent
 import javafx.scene.layout.BorderPane
 import rx.Observable
 import tornadofx.*
@@ -35,90 +37,86 @@ import java.awt.Desktop
 import java.io.File
 import java.util.concurrent.TimeUnit
 
+/**
+ * Main view of the File Finder application. Instance of a [View] object.
+ */
 class MainView : View() {
-
-    val KeyEvent.isNoModifier: Boolean get() = !isAltDown && !isControlDown && !isMetaDown && !isShiftDown
-    val KeyEvent.isOnlyControlDown: Boolean get() = !isAltDown && isControlDown && !isMetaDown && !isShiftDown
-    val KeyEvent.isOnlyShiftDown: Boolean get() = !isAltDown && !isControlDown && !isMetaDown && isShiftDown
-    val KeyEvent.isOnlyAltDown: Boolean get() = isAltDown && !isControlDown && !isMetaDown && !isShiftDown
-    val KeyEvent.isOnlyMetaDown: Boolean get() = !isAltDown && !isControlDown && isMetaDown && !isShiftDown
-
     override val root: BorderPane = BorderPane()
 
-    val MAX_ITEMS_TO_DISPLAY = 15
-
     lateinit var files: List<File>
-    val search = SimpleStringProperty()
-    val result = ObservableListWrapper<FileSearchResult>(mutableListOf<FileSearchResult>())
 
-    var searchTime by property(0L)
-    fun searchTimeProperty() = getProperty(MainView::searchTime)
+    val searchTextProperty = SimpleStringProperty()
+    val resultListProperty = ObservableListWrapper<FileSearchResult>(mutableListOf<FileSearchResult>())
 
-    var filesSize by property(0)
-    fun filesSizeProperty() = getProperty(MainView::filesSize)
+    val searchTimeProperty = SimpleLongProperty(0L)
+    val numberFilesProperty = SimpleLongProperty(0L)
 
-    val observable: Observable<String>
+    val searchTextObservableBuffer: Observable<String>
 
-    val table: TableView<FileSearchResult> by lazy {
+    val resultsTableView: TableView<FileSearchResult> by lazy {
         @Suppress("UNCHECKED_CAST")
         (root.scene.lookup("#tableView") as TableView<FileSearchResult>)
     }
-
-    val inputSearch: TextField by lazy {
-        root.scene.lookup("#inputSearch") as TextField
+    val searchInputText: TextField by lazy {
+        root.scene.lookup("#searchInputText") as TextField
     }
-
 
     init {
         title = messages["title"]
         addStageIcon(Image(MainView::class.java.getResourceAsStream("/icon.png")))
 
-        observable = Observable.create<String> {
-            search.onChange { searchText ->
-                when (searchText) {
-                    null -> result.clear()
-                    else -> it.onNext(searchText)
+        // Creating an observable from all the values which are typed in the input field
+        searchTextObservableBuffer = Observable.create<String> {
+            searchTextProperty.onChange { text ->
+                when (text) {
+                    null -> resultListProperty.clear()
+                    else -> it.onNext(text)
                 }
             }
         }
 
-        observable.debounce(ExecutionContext.debounce, TimeUnit.MILLISECONDS).subscribe {
+        // Using debounce to actually execute the research after a small delay when the latest character is typed
+        searchTextObservableBuffer.debounce(ExecutionContext.debounce, TimeUnit.MILLISECONDS).subscribe {
             runLater {
-                with(result) {
-                    println(it)
+                with(resultListProperty) {
                     clear()
                     val (searchResults, time) = time {
                         val searchQuery = ContextParser(registeredBangs()).parse(it)
-                        files.search(searchQuery).take(MAX_ITEMS_TO_DISPLAY)
+                        files.search(searchQuery).take(ExecutionContext.items)
                     }
                     addAll(searchResults)
-                    searchTime = time
+                    searchTimeProperty.set(time)
                 }
             }
         }
 
+        // Actually creating the view:
         with(root) {
+
+            // First - a search bar to type our queries
             top {
-                textfield(search) {
+                textfield(searchTextProperty) {
                     isDisable = true
-                    id = "inputSearch"
+                    id = "searchInputText"
                     setOnKeyPressed { event ->
                         when (event.code) {
-                            DOWN -> table.apply {
+                            DOWN -> resultsTableView.apply {
                                 selectFirst()
                                 requestFocus()
                             }
-                            ENTER -> if (result.isNotEmpty()) open(result[0])
-                            O -> if (event.isControlDown && result.isNotEmpty()) open(result[0])
-                            B -> if (event.isControlDown && result.isNotEmpty()) browse(result[0])
+                            ENTER -> if (resultListProperty.isNotEmpty()) open(resultListProperty[0])
+                            O -> if (event.isControlDown && resultListProperty.isNotEmpty()) open(resultListProperty[0])
+                            B -> if (event.isControlDown && resultListProperty.isNotEmpty()) browse(resultListProperty[0])
                         }
                     }
                 }
             }
 
+            // Second - a table for displaying all the results
             center {
-                tableview(result) {
+                tableview(resultListProperty) {
                     id = "tableView"
+
                     column("Score", FileSearchResult::score).prefWidth = 50.0
                     column("File", FileSearchResult::filename).prefWidth = 250.0
                     column("Path", FileSearchResult::file).prefWidth = 600.0
@@ -126,8 +124,8 @@ class MainView : View() {
                     setOnKeyPressed { event ->
                         with(event) {
                             when (code) {
-                                UP, PAGE_UP, HOME -> if (selectedItem == result.first()) inputSearch.requestFocus()
-                                ESCAPE -> inputSearch.requestFocus()
+                                UP, PAGE_UP, HOME -> if (selectedItem == resultListProperty.first()) searchInputText.requestFocus()
+                                ESCAPE -> searchInputText.requestFocus()
                                 B -> if (isNoModifier) browse(selectedItem)
                                 O -> if (isNoModifier) open(selectedItem)
                                 C -> if (isOnlyControlDown) copy(selectedItem)
@@ -141,23 +139,25 @@ class MainView : View() {
                 }
             }
 
+            // Finally - a small label to indicate the number of files and time ellapsed while searching
             bottom {
                 label {
                     textProperty().bind(Bindings.format("Searched %s files in %sms.",
-                                                        filesSizeProperty(),
-                                                        searchTimeProperty()))
+                                                        numberFilesProperty,
+                                                        searchTimeProperty))
                 }
             }
         }
 
         runAsync { files = loadAll(*ExecutionContext.directories.toTypedArray()) } ui {
-            inputSearch.isDisable = false
-            filesSize = files.size
+            searchInputText.isDisable = false
+            numberFilesProperty.set(files.size.toLong())
         }
     }
 
     /**
-     * Open the parent folder of a file in the default application
+     * Opens the parent folder of a file in the default application
+     * @param result the selected FileSearchResult we'd like to browse
      */
     private fun browse(result: FileSearchResult?) {
         if (result != null) {
@@ -166,7 +166,8 @@ class MainView : View() {
     }
 
     /**
-     * Open the selected file in the default application
+     * Opens the selected file in the default application
+     * @param result the selected FileSearchResult we'd like to open
      */
     private fun open(result: FileSearchResult?) {
         if (result != null) {
@@ -175,7 +176,8 @@ class MainView : View() {
     }
 
     /**
-     * Copy in the clipboard the path of selected file
+     * Copies in the clipboard the path of selected file
+     * @param result the selected FileSearchResult we'd like to copy the path from
      */
     private fun copy(result: FileSearchResult?) {
         if (result != null) {

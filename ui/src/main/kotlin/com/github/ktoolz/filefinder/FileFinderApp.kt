@@ -19,6 +19,10 @@ import javafx.stage.Stage
 import tornadofx.App
 import tornadofx.importStylesheet
 
+/**
+ * Main application.
+ * Allows to start the GUI.
+ */
 class FileFinderApp : App(MainView::class) {
     init {
         importStylesheet(Styles::class)
@@ -30,6 +34,10 @@ class FileFinderApp : App(MainView::class) {
     }
 }
 
+/**
+ * Just the main entrypoint of the application :)
+ * It'll basically just run the GUI.
+ */
 fun main(args: Array<String>) {
     Application.launch(FileFinderApp::class.java, *args)
 }

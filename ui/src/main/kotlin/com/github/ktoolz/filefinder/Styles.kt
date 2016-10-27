@@ -14,6 +14,10 @@ package com.github.ktoolz.filefinder
 import javafx.scene.text.FontWeight.BOLD
 import tornadofx.*
 
+/**
+ * Simply the Styles of our application :)
+ * Kind of Kotlin made CSS.
+ */
 class Styles : Stylesheet() {
     companion object {
         val heading by cssclass()
